@@ -27,7 +27,7 @@ Conventional sentiment analysis tools classify customer feedback into coarse buc
 
 ```
 /src        Source code (model training, inference, SHAP explainability pipeline)
-/docs       Project documentation, including the full capstone report
+/docs       Project documentation, including the full capstone report and project abstract
 /data       Datasets or documented data source references (e.g. GoEmotions)
 /results    Model outputs, evaluation metrics, prediction artifacts
 /reports    Generated reports, writeups, presentation material
