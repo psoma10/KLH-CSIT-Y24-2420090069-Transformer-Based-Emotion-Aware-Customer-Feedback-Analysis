@@ -34,6 +34,15 @@ Conventional sentiment analysis tools classify customer feedback into coarse buc
 README.md   This file
 ```
 
+## Datasets
+
+| Dataset | Role | Link |
+|---------|------|------|
+| GoEmotions | Train/evaluate the RoBERTa emotion classifier (27 emotions + neutral) | https://huggingface.co/datasets/google-research-datasets/go_emotions |
+| dair-ai/emotion (CARER) | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/dair-ai/emotion |
+| DailyDialog | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/li2017dailydialog/daily_dialog |
+| Amazon Polarity | Inference/demo only on real product reviews, never used for fine-tuning | https://huggingface.co/datasets/fancyzhx/amazon_polarity |
+
 ## Setup and Execution Instructions
 
 ```bash
