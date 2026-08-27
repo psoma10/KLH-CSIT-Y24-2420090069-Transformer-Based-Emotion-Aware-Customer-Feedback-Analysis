@@ -36,12 +36,20 @@ README.md   This file
 
 ## Datasets
 
-| Dataset | Role | Link |
-|---------|------|------|
-| GoEmotions | Train/evaluate the RoBERTa emotion classifier (27 emotions + neutral) | https://huggingface.co/datasets/google-research-datasets/go_emotions |
-| dair-ai/emotion (CARER) | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/dair-ai/emotion |
-| DailyDialog | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/li2017dailydialog/daily_dialog |
-| Amazon Polarity | Inference/demo only on real product reviews, never used for fine-tuning | https://huggingface.co/datasets/fancyzhx/amazon_polarity |
+10 emotion/sentiment datasets surveyed; **4 main datasets used** in this project (marked below), rest referenced as related work / considered alternatives.
+
+| Dataset | Used | Role | Link |
+|---------|------|------|------|
+| GoEmotions | Yes (main) | Train/evaluate the RoBERTa emotion classifier (27 emotions + neutral) | https://huggingface.co/datasets/google-research-datasets/go_emotions |
+| dair-ai/emotion (CARER) | Yes (main) | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/dair-ai/emotion |
+| DailyDialog | Yes (main) | Auxiliary corpus for multi-corpus training (masked multi-label loss) | https://huggingface.co/datasets/li2017dailydialog/daily_dialog |
+| Amazon Polarity | Yes (main) | Inference/demo only on real product reviews, never used for fine-tuning | https://huggingface.co/datasets/fancyzhx/amazon_polarity |
+| ISEAR | No — related work | Emotion antecedents survey dataset (7 classes), referenced in literature survey | https://huggingface.co/datasets/TahaRasouli/ISEAR |
+| SemEval-2018 Task 1 (Affect in Tweets) | No — related work | Multi-label tweet emotion intensity/classification, considered alternative corpus | https://huggingface.co/datasets/SemEvalWorkshop/sem_eval_2018_task_1 |
+| SemEval-2019 Task 3 (EmoContext) | No — related work | Contextual emotion detection in text, referenced in literature survey | https://aclanthology.org/S19-2005/ |
+| SemEval-2014 Task 4 (ABSA) | No — related work | Aspect-based sentiment analysis (restaurant/laptop reviews), motivated segment-level design | https://alt.qcri.org/semeval2014/task4/ |
+| Yelp Polarity | No — related work | Large-scale binary review sentiment, considered alternative demo corpus | https://huggingface.co/datasets/fancyzhx/yelp_polarity |
+| IMDB Large Movie Review Dataset | No — related work | Binary movie review sentiment, considered alternative demo corpus | https://huggingface.co/datasets/stanfordnlp/imdb |
 
 ## Setup and Execution Instructions
 
