@@ -1,0 +1,63 @@
+# Training configuration for multi-label emotion classification on GoEmotions.
+# Consumed by ml/train_roberta.py and ml/evaluate.py. Override any field via CLI flags.
+
+model:
+  # roberta-base: 125M params, fits comfortably on a Colab T4.
+  name: roberta-base
+  max_length: 128          # GoEmotions comments are short; 128 covers >99% without truncation.
+  dropout: 0.1
+
+data:
+  dataset: go_emotions
+  config: simplified       # 27 emotions + neutral, pre-split by the dataset authors.
+  num_labels: 28
+  # Amazon reviews are used for inference and demo only, never for training.
+  amazon_sample_path: data/amazon_reviews_sample.csv
+
+  # Auxiliary corpora mixed into the TRAIN split only (see ml/aux_datasets.py).
+  # Each annotates a subset of the 28 labels and ships a per-row mask, so the
+  # labels it does not cover contribute no gradient. Empty by default so the
+  # numbers in MODEL_CARD.md stay reproducible from this config; populate it to
+  # run the multi-corpus comparison.
+  #   dair_emotion  20k tweets,  6 labels  (single-label)
+  #   semeval2018   ~7k tweets,  8 labels  (multi-label)
+  #   daily_dialog  ~100k turns, 7 labels  (single-label, includes neutral)
+  aux_datasets: []
+
+training:
+  epochs: 4
+  batch_size: 32
+  eval_batch_size: 64
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  # Multi-label task: BCEWithLogitsLoss + sigmoid, NOT softmax/cross-entropy.
+  # GoEmotions labels co-occur (a comment can be both "joy" and "gratitude").
+  loss: bce_with_logits
+  fp16: true               # Automatically disabled when no CUDA device is present.
+  seed: 42
+  gradient_accumulation_steps: 1
+  early_stopping_patience: 2
+
+  # Weight each label's positive BCE term by neg/pos to counter GoEmotions'
+  # severe class imbalance. Off by default so the numbers in MODEL_CARD.md stay
+  # reproducible from this config; turn it on to run the ablation on whether
+  # grief/pride/relief (0.000 F1) are data-starved or merely drowned out by the
+  # frequent labels. Expect macro F1 to shift in both directions — rare-label
+  # recall up, frequent-label precision down.
+  use_pos_weight: false
+  pos_weight_cap: 20.0
+
+thresholds:
+  # A single global 0.5 cutoff underperforms badly on rare labels (grief, pride,
+  # and relief each sit under 1% of the data). We tune one threshold per label on
+  # the validation split and persist them alongside the weights.
+  strategy: per_label
+  search_min: 0.05
+  search_max: 0.95
+  search_steps: 19
+  fallback: 0.30
+
+output:
+  dir: artifacts/model-v1
+  save_best_metric: macro_f1

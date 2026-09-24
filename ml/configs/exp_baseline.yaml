@@ -1,0 +1,33 @@
+model:
+  name: roberta-base
+  max_length: 128
+  dropout: 0.1
+data:
+  dataset: go_emotions
+  config: simplified
+  num_labels: 28
+  amazon_sample_path: data/amazon_reviews_sample.csv
+  aux_datasets: []
+training:
+  epochs: 4
+  batch_size: 32
+  eval_batch_size: 64
+  learning_rate: 2.0e-05
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  loss: bce_with_logits
+  fp16: true
+  seed: 42
+  gradient_accumulation_steps: 1
+  early_stopping_patience: 2
+  use_pos_weight: false
+  pos_weight_cap: 20.0
+thresholds:
+  strategy: per_label
+  search_min: 0.05
+  search_max: 0.95
+  search_steps: 19
+  fallback: 0.3
+output:
+  dir: artifacts/baseline-goemotions
+  save_best_metric: macro_f1
