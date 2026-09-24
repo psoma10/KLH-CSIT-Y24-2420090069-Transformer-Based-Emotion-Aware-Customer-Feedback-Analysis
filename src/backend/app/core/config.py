@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # Model
-    model_dir: Path = Path("../ml/artifacts/model-v1")
+    model_dir: Path = Path("../../results/ml-artifacts/model-v1")
     model_max_length: int = 128
     shap_max_evals: int = 200
     shap_cache_ttl_seconds: int = 60 * 60 * 24 * 7  # SHAP output is deterministic per (text, model version)

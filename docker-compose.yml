@@ -32,7 +32,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: src/backend/Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -41,10 +41,10 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       FRONTEND_ORIGIN: http://localhost:5173
-      MODEL_DIR: /app/ml/artifacts/model-v1
+      MODEL_DIR: /app/results/ml-artifacts/model-v1
       MODEL_VERSION: model-v1
     volumes:
-      - ./ml/artifacts:/app/ml/artifacts
+      - ./results/ml-artifacts:/app/results/ml-artifacts
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
   celery_worker:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: src/backend/Dockerfile
     command: celery -A app.services.celery_app worker --loglevel=info
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/emotion_feedback
@@ -62,10 +62,10 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       FRONTEND_ORIGIN: http://localhost:5173
-      MODEL_DIR: /app/ml/artifacts/model-v1
+      MODEL_DIR: /app/results/ml-artifacts/model-v1
       MODEL_VERSION: model-v1
     volumes:
-      - ./ml/artifacts:/app/ml/artifacts
+      - ./results/ml-artifacts:/app/results/ml-artifacts
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./src/frontend
     ports:
       - "5173:5173"
     environment:

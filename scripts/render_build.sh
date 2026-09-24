@@ -10,12 +10,12 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "$script_dir/.." && pwd)"
 
 echo "render_build: installing backend dependencies"
-# backend/requirements.txt already pins torch, transformers and shap to the same
-# versions as ml/requirements.txt, so the training-time artifact loads
-# identically here. Installing ml/requirements.txt too would pull datasets and
-# accelerate, which neither the API nor the worker imports.
+# src/backend/requirements.txt already pins torch, transformers and shap to the
+# same versions as src/ml/requirements.txt, so the training-time artifact loads
+# identically here. Installing src/ml/requirements.txt too would pull datasets
+# and accelerate, which neither the API nor the worker imports.
 pip install --no-cache-dir --upgrade pip
-pip install --no-cache-dir -r "$project_dir/backend/requirements.txt"
+pip install --no-cache-dir -r "$project_dir/src/backend/requirements.txt"
 
 echo "render_build: fetching model artifact"
 "$script_dir/fetch_model.sh"

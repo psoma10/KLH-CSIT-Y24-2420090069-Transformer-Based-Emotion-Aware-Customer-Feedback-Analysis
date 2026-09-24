@@ -7,8 +7,12 @@ venv/
 .env.local
 
 # ML artifacts — large model weights, not committed
-ml/artifacts/*
-!ml/artifacts/.gitkeep
+results/ml-artifacts/*
+!results/ml-artifacts/.gitkeep
+!results/ml-artifacts/*/train_metrics.json
+!results/ml-artifacts/*/test_metrics.json
+!results/ml-artifacts/*/thresholds.json
+!results/ml-artifacts/*/config.json
 ml/data/*.jsonl
 ml/data/*.csv
 

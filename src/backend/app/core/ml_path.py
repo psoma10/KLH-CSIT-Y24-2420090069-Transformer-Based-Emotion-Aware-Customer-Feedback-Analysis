@@ -7,9 +7,10 @@ must not pull in torch just to validate a string. Keeping the lookup here
 means there is exactly one definition of where `ml/` lives.
 
 The directory sits at a different depth depending on the layout: a host
-checkout has this file at <repo>/backend/app/core/, while the Docker image
-flattens it to /app/app/core/ with ml/ at /app/ml. Walk up looking for the
-directory rather than hardcoding a parent index.
+checkout has this file at <repo>/src/backend/app/core/, with ml/ at
+<repo>/src/ml, while the Docker image flattens it to /app/app/core/ with
+ml/ at /app/ml. Walk up looking for either layout rather than hardcoding a
+parent index.
 """
 import sys
 from pathlib import Path
@@ -17,9 +18,9 @@ from pathlib import Path
 
 def find_ml_dir() -> Path | None:
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / "ml"
-        if (candidate / "emotion_labels.py").is_file():
-            return candidate
+        for candidate in (parent / "ml", parent / "src" / "ml"):
+            if (candidate / "emotion_labels.py").is_file():
+                return candidate
     return None
 
 

@@ -1,15 +1,42 @@
 # Explainable Transformer-Based Emotion-Aware Customer Feedback Analysis
 
-A capstone project (Business Analytics) that classifies fine-grained emotion in customer reviews using a fine-tuned RoBERTa model, and explains every prediction with SHAP token attributions instead of returning an opaque score.
+*A Multi-Label Fine-Grained Emotion Classification System with SHAP-Based Token Attribution for Business-Actionable Review Insights*
 
-Most sentiment tools stop at "positive / negative / neutral," which is too coarse to act on and too opaque to trust. This system predicts 27 GoEmotions emotions plus `neutral` (28 labels total) for each review, rolls the 27 up into 4 business-relevant buckets — **satisfaction, frustration, confusion, concern** — and, critically, shows *which words in the text* drove each prediction via SHAP. A business stakeholder can see not just "this review scored 0.83 frustration" but the specific phrases that pushed it there, which is the difference between a black-box model and a decision-support tool.
+**Capstone Project — Business Analytics**
 
-It also scores a review **segment by segment**, so a review that opens with praise and ends with a defect report reports both instead of averaging them into a single misleading label.
+## Team
+
+| Role | Name | ID |
+|---|---|---|
+| Supervisor | Dr. Swanthana Katanguri | — |
+| Team Member | Pujith Krishna Soma | 2420090069 |
+| Team Member | Ch G Sree Susheel | 2420090124 |
+| Team Member | Sriram V | 2420090126 |
+| Team Member | Yaswanth Chowdary | 2420090106 |
+
+## Abstract
+
+Conventional sentiment analysis tools classify customer feedback into coarse buckets — positive, negative, or neutral — which is too coarse for a business to act on and too opaque to trust. This project builds a transformer-based multi-label emotion classification framework that closes both gaps at once. A `roberta-base` model is fine-tuned on the GoEmotions taxonomy (27 emotions + neutral, 28 labels total) using multi-label (sigmoid, not softmax) classification, so a single review can carry more than one emotion simultaneously. Predictions are explained at the token level via SHAP, so a non-technical stakeholder can see not just a probability score but the specific words that drove it. The 27 fine-grained emotions roll up into 4 business-actionable buckets — **satisfaction, frustration, confusion, concern** — and each review is scored **segment by segment** rather than as a single average, so a review that opens with praise and ends with a complaint reports both instead of one misleading label. Training extends beyond GoEmotions alone via a masked multi-label loss that combines auxiliary corpora (CARER/dair-ai emotion, DailyDialog) without corrupting the label space with false negatives from their partial label coverage. The system is wrapped in a FastAPI backend and a React dashboard, making it a deployable, callable product rather than a notebook experiment. Full comparison against the reviewed literature — headline metrics, per-label deltas, and a capability matrix — is in [`docs/COMPARISON.md`](docs/COMPARISON.md).
+
+## Current phase status
+
+| Phase | Status |
+|---|---|
+| Literature survey (12 papers) + research gap identification | ✅ Done — [`docs/docx_context.md`](docs/docx_context.md) |
+| Data preparation (GoEmotions, CARER, DailyDialog) | ✅ Done — [`data/`](data/) |
+| Model training (baseline + multi-corpus) | ✅ Done — [`results/ml-artifacts/`](results/ml-artifacts/) |
+| Evaluation + comparison against literature | ✅ Done — [`docs/COMPARISON.md`](docs/COMPARISON.md), [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) |
+| SHAP explainability integration | ✅ Done — [`src/ml/shap_explainer.py`](src/ml/shap_explainer.py) |
+| Backend API (FastAPI) | ✅ Done — [`src/backend/`](src/backend/) |
+| Frontend dashboard (React) | ✅ Done — [`src/frontend/`](src/frontend/) |
+| Deployment (Render + Vercel) | 🟡 In progress — backend live, model weights not yet hosted on Render (`/predict` returns 503 until `MODEL_URL` is set) |
+| Authentication / production hardening | ⬜ Not started — see [Security posture](#security-posture) |
 
 ---
 
 ## Table of contents
 
+- [Project structure](#project-structure)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Datasets](#datasets)
@@ -21,9 +48,34 @@ It also scores a review **segment by segment**, so a review that opens with prai
 - [Model performance](#model-performance)
 - [Tests](#tests)
 - [Deployment](#deployment)
-- [Project structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
 - [Status and limitations](#status-and-limitations)
+
+---
+
+## Project structure
+
+Mandatory top-level layout:
+
+```
+.
+├── src/            # All source code
+│   ├── backend/     # FastAPI app (API, models, services, tests)
+│   ├── frontend/    # React + Vite dashboard
+│   └── ml/          # Training pipeline, SHAP explainer, configs
+├── docs/           # Model card, literature comparison, source papers
+│   └── papers/      # PDFs of the 12 reviewed literature-survey papers
+├── data/           # Datasets (raw + xlsx-viewable + preprocessed jsonl)
+├── results/        # Trained model artifacts, metrics, thresholds
+├── reports/        # Graded review-phase submission materials
+│   ├── review-1-materials/
+│   └── review-2-materials/
+├── scripts/        # Deployment helper scripts (Render build, model fetch)
+├── docker-compose.yml
+└── README.md       # This file
+```
+
+See [Detailed source layout](#detailed-source-layout) below for what's inside `src/`.
 
 ---
 
@@ -102,7 +154,7 @@ It also scores a review **segment by segment**, so a review that opens with prai
 **Infra**
 - Docker Compose (postgres, redis, backend, celery_worker, frontend)
 - Render Blueprint (`render.yaml` at repo root) — API, worker, Postgres, Redis
-- Vercel (`frontend/vercel.json`) — static frontend
+- Vercel (`src/frontend/vercel.json`) — static frontend
 - Model training designed for Google Colab (GPU), not containerized
 
 ---
@@ -118,13 +170,13 @@ It also scores a review **segment by segment**, so a review that opens with prai
 | DailyDialog | 7, single-label | auxiliary train | [HF](https://huggingface.co/datasets/roskoN/dailydialog) | [arXiv:1710.03957](https://arxiv.org/abs/1710.03957) |
 | amazon_polarity | binary sentiment | inference / demo only | [HF](https://huggingface.co/datasets/fancyzhx/amazon_polarity) | — |
 
-Each auxiliary corpus annotates only part of the 28-label space, and a label it does not annotate is **unknown, not absent** — a `dair-ai` row tagged `sadness` says nothing about whether `gratitude` applies, because annotators were never asked. Scoring those zeros as negatives would drive every uncovered label toward zero wherever that corpus appears. Rows therefore carry a coverage mask and the loss is computed only over annotated positions. Mappings and the reasoning behind each live in [`ml/aux_datasets.py`](ml/aux_datasets.py); [`ml/MODEL_CARD.md`](ml/MODEL_CARD.md) is the source of truth for provenance and metrics.
+Each auxiliary corpus annotates only part of the 28-label space, and a label it does not annotate is **unknown, not absent** — a `dair-ai` row tagged `sadness` says nothing about whether `gratitude` applies, because annotators were never asked. Scoring those zeros as negatives would drive every uncovered label toward zero wherever that corpus appears. Rows therefore carry a coverage mask and the loss is computed only over annotated positions. Mappings and the reasoning behind each live in [`src/ml/aux_datasets.py`](src/ml/aux_datasets.py); [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) is the source of truth for provenance and metrics.
 
 Worth stating plainly: these corpora are tweets and dialogue, and none contains `grief`, `pride`, or `relief`. They will not fix those three 0.000-F1 labels, and they do not close the product-review domain gap.
 
 ## Quick start
 
-Fastest path for someone who just wants to see it running, assuming a trained model already exists at `ml/artifacts/model-v1/`:
+Fastest path for someone who just wants to see it running, assuming a trained model already exists at `results/ml-artifacts/model-v1/`:
 
 ```bash
 cd Project
@@ -155,7 +207,7 @@ cd Project
 ### 2. ML: train and evaluate the model
 
 ```bash
-cd ml
+cd src/ml
 pip install -r requirements.txt
 
 # Prepare data
@@ -174,9 +226,9 @@ python train_roberta.py --config configs/train_config.yaml
 python evaluate.py --config configs/train_config.yaml
 ```
 
-Confirm `ml/artifacts/model-v1/` now contains the model weights, `thresholds.json`, and evaluation metrics. **`evaluate.py` is what produces `thresholds.json` — training alone does not.** The backend will not serve `/predict`, `/analyze`, or `/explain` until this directory exists.
+Confirm `results/ml-artifacts/model-v1/` now contains the model weights, `thresholds.json`, and evaluation metrics. **`evaluate.py` is what produces `thresholds.json` — training alone does not.** The backend will not serve `/predict`, `/analyze`, or `/explain` until this directory exists.
 
-If you trained on Colab, download `artifacts/model-v1/` and place it at `ml/artifacts/model-v1/` locally — that path is what both the backend `.env` default and the Docker Compose volume mount expect. The weights are ~479MB and gitignored, so they never travel with a `git clone`.
+If you trained on Colab, download `artifacts/model-v1/` and place it at `results/ml-artifacts/model-v1/` locally — that path is what both the backend `.env` default and the Docker Compose volume mount expect. The weights are ~479MB and gitignored, so they never travel with a `git clone`.
 
 ### 3. Infra: start Postgres and Redis
 
@@ -189,7 +241,7 @@ docker compose up -d postgres redis
 ### 4. Backend
 
 ```bash
-cd backend
+cd src/backend
 cp .env.example .env   # adjust values if not using the Docker defaults
 pip install -r requirements.txt
 uvicorn app.main:app --reload   # http://localhost:8000
@@ -206,7 +258,7 @@ Tables are created from ORM metadata on startup (no Alembic) — a deliberate si
 ### 5. Frontend
 
 ```bash
-cd frontend
+cd src/frontend
 npm install
 npm run dev   # http://localhost:5173
 ```
@@ -217,13 +269,13 @@ Set `VITE_API_URL` if the backend isn't at `http://localhost:8000`.
 
 ## Configuration
 
-Backend settings live in `backend/app/core/config.py` and are read from environment variables (`backend/.env` in local dev, the `environment:` block in Docker Compose, `envVars:` in `render.yaml` on Render). Every value has a working default, so `.env` is only needed to override them.
+Backend settings live in `src/backend/app/core/config.py` and are read from environment variables (`src/backend/.env` in local dev, the `environment:` block in Docker Compose, `envVars:` in `render.yaml` on Render). Every value has a working default, so `.env` is only needed to override them.
 
 ### Model
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MODEL_DIR` | `../ml/artifacts/model-v1` | Where the fine-tuned model artifact is loaded from |
+| `MODEL_DIR` | `../../results/ml-artifacts/model-v1` | Where the fine-tuned model artifact is loaded from |
 | `MODEL_VERSION` | `model-v1` | Reported by `/api/model/info`; part of the SHAP cache key |
 | `MODEL_MAX_LENGTH` | `128` | Tokenizer truncation length |
 
@@ -258,7 +310,7 @@ Backend settings live in `backend/app/core/config.py` and are read from environm
 | `FRONTEND_ORIGIN` | `http://localhost:5173` | Allowed CORS origin. Compared against the browser's `Origin` header — **no trailing slash**. |
 | `API_V1_PREFIX` | `/api` | Router prefix for all non-`/health` routes |
 
-Frontend uses a single variable, `VITE_API_URL` (see `frontend/.env.example`).
+Frontend uses a single variable, `VITE_API_URL` (see `src/frontend/.env.example`).
 
 ---
 
@@ -330,7 +382,7 @@ The endpoint returns a job record immediately; poll `GET /api/jobs/{job_id}` for
 
 **A missing model or database degrades the API instead of crashing it.** Training happens on Colab, separate from the app, so the artifact directory is frequently absent in a fresh checkout, and Postgres is optional for the read-only demo path. Both loads are wrapped in try/except at startup; only the routes that genuinely need the missing dependency fail.
 
-**`ml/emotion_labels.py` is the single source of truth for label order.** It is imported by every training script *and* by the backend's model service. `predict()` zips this hardcoded label list against raw logits and ignores the checkpoint's own `id2label` — so a checkpoint trained in a different order would attach every score to the wrong emotion and never raise an exception. A test guards this specifically.
+**`src/ml/emotion_labels.py` is the single source of truth for label order.** It is imported by every training script *and* by the backend's model service. `predict()` zips this hardcoded label list against raw logits and ignores the checkpoint's own `id2label` — so a checkpoint trained in a different order would attach every score to the wrong emotion and never raise an exception. A test guards this specifically.
 
 **Tables created from ORM metadata, no Alembic.** The schema is small and the project has no production upgrade path to protect, so `Base.metadata.create_all` at startup buys working setup in one line. Note that `create_all` only creates *missing* tables — it does not `ALTER` existing ones, so a database created before the index definitions in `app/models/review.py` were added will not gain them. Drop the volume (`docker compose down -v`) or add the indexes by hand. A real deployment needs migrations.
 
@@ -338,7 +390,7 @@ The endpoint returns a job record immediately; poll `GET /api/jobs/{job_id}` for
 
 **Training data fetched as Parquet over plain HTTP, not through the `datasets` library.** `datasets` pulls in `lzma` internally, which fails to import on a Python built without the system `_lzma` library — a real failure mode on some local setups, not hypothetical. HuggingFace publishes a canonical Parquet export for every dataset with an open schema (verified against the published GoEmotions split sizes: 43410/5426/5427), so `data_prep.py` downloads those directly instead. This also means training data can be prepared with a bare `pyarrow`, no heavyweight dataset-loading dependency at all.
 
-**SemEval-2018 Task 1 was evaluated as a third auxiliary corpus and rejected.** The official dataset is script-based with no Parquet export; the one community mirror that does export Parquet ships text with stopwords stripped and casing folded ("whatever decide make sure make happy"). RoBERTa is pretrained on natural text and leans on function words and casing to place tokens in context, so mixing that register into training would add distribution noise rather than emotion signal. Excluded deliberately — see `ml/aux_datasets.py` for the full reasoning.
+**SemEval-2018 Task 1 was evaluated as a third auxiliary corpus and rejected.** The official dataset is script-based with no Parquet export; the one community mirror that does export Parquet ships text with stopwords stripped and casing folded ("whatever decide make sure make happy"). RoBERTa is pretrained on natural text and leans on function words and casing to place tokens in context, so mixing that register into training would add distribution noise rather than emotion signal. Excluded deliberately — see `src/ml/aux_datasets.py` for the full reasoning.
 
 **Live preview and Submit are different requests, only one of which writes to the database.** The Analyze page calls `/analyze` on every debounced keystroke to drive the live-analysis panel, and early versions of this endpoint persisted a `Review` row on every one of those calls — the Dashboard ended up full of duplicate mid-typing fragments, with `product_id`/`star_rating`/`review_date` always null since the preview never carried them. `AnalyzeRequest.persist` defaults to `false`; the preview never sets it, so it never writes. The Submit button is a separate `useMutation` that calls the same endpoint with `persist: true` plus the star rating and product actually selected in the UI, and only that call writes a row, with `review_date` stamped server-side.
 
@@ -346,7 +398,7 @@ The endpoint returns a job record immediately; poll `GET /api/jobs/{job_id}` for
 
 ## Model performance
 
-Full per-label results, tuned thresholds, and limitations: **[`ml/MODEL_CARD.md`](ml/MODEL_CARD.md)**. The weights are gitignored, so that file is where the numbers live independently of the artifact.
+Full per-label results, tuned thresholds, and limitations: **[`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)**. The weights are gitignored, so that file is where the numbers live independently of the artifact.
 
 **GoEmotions test split** — Macro F1 **0.475** · Micro F1 **0.600** · Validation loss **0.085**
 
@@ -368,20 +420,20 @@ Both figures are in line with published `roberta-base` GoEmotions baselines (mac
 
 Small net gain, but the aggregate hides where it actually mattered. `nervousness` — the model's second-weakest label, 23 test examples — jumped **+0.166 to +0.321 F1** across the two runs, along with real gains on `disgust`, `optimism`, `surprise`, and `anger`. `realization` and `embarrassment` regressed in both runs by a consistent margin, a genuine trade-off rather than noise: neither auxiliary corpus covers those labels, so the model's gradient budget shifted toward the labels that gained coverage. `grief`, `pride`, and `relief` stayed at exactly 0.000 in both runs — two independent confirmations that they are data-starved rather than merely under-weighted, since neither auxiliary corpus contains any of the three.
 
-The mechanism this depends on: each auxiliary corpus annotates only a subset of the 28 labels, so a label it does not annotate is *unannotated*, not negative. Treating those zeros as negatives would suppress every uncovered label whenever that corpus appears — the opposite of the intended effect. `ml/aux_datasets.py` and `ml/train_roberta.py`'s masked BCE loss (see [Design decisions](#design-decisions)) exist specifically to prevent that. Not used for `model-v1` — `aux_datasets: []` by default, so the headline numbers above stay reproducible from the committed config; this is a documented alternative, not the shipped model.
+The mechanism this depends on: each auxiliary corpus annotates only a subset of the 28 labels, so a label it does not annotate is *unannotated*, not negative. Treating those zeros as negatives would suppress every uncovered label whenever that corpus appears — the opposite of the intended effect. `src/ml/aux_datasets.py` and `src/ml/train_roberta.py`'s masked BCE loss (see [Design decisions](#design-decisions)) exist specifically to prevent that. Not used for `model-v1` — `aux_datasets: []` by default, so the headline numbers above stay reproducible from the committed config; this is a documented alternative, not the shipped model.
 
 ---
 
 ## Tests
 
 ```bash
-cd backend
+cd src/backend
 pytest tests/ -q
 ```
 
 **42 tests across 4 suites** — `test_api.py` (15), `test_segmentation.py` (11), `test_emotion_model.py` (10), `test_limits.py` (6).
 
-The suite runs against the **real** fine-tuned checkpoint and the real FastAPI app — the model is the system under test, so it is never mocked. It needs `ml/artifacts/model-v1/` to exist and skips itself with a clear message if it doesn't. Postgres is not required: the app is designed to start without a database, and the tests exercise that degraded path on purpose.
+The suite runs against the **real** fine-tuned checkpoint and the real FastAPI app — the model is the system under test, so it is never mocked. It needs `results/ml-artifacts/model-v1/` to exist and skips itself with a clear message if it doesn't. Postgres is not required: the app is designed to start without a database, and the tests exercise that degraded path on purpose.
 
 What it guards, beyond ordinary route behavior:
 
@@ -403,7 +455,7 @@ The stack splits across two providers: Python on Render, static frontend on Verc
 
 ### Backend, worker, Postgres, Redis → Render
 
-`render.yaml` sits at the **repo root** (Render requires this), while the app lives one level down in `Project/`, so every path in it is `Project/`-prefixed. Deploy via **Render Dashboard → New → Blueprint**, pointed at the repo; Render creates all four services in one pass.
+`render.yaml` sits at the **repo root** (Render requires this); every path in it is relative to that root. Deploy via **Render Dashboard → New → Blueprint**, pointed at the repo; Render creates all four services in one pass.
 
 | Service | Type | Plan | Notes |
 |---|---|---|---|
@@ -419,11 +471,11 @@ The stack splits across two providers: Python on Render, static frontend on Verc
 1. **`MODEL_URL`** on both `emotion-api` and `emotion-worker` — where `scripts/fetch_model.sh` downloads the ~479MB artifact from. The weights are gitignored, so they are *not* in the repo Render clones. See that script for accepted formats.
 2. **`FRONTEND_ORIGIN`** on `emotion-api` — your Vercel production URL, with no trailing slash.
 
-Build runs `Project/scripts/render_build.sh`, which installs `backend/requirements.txt` (already pinned to the same torch/transformers/shap versions as `ml/requirements.txt`, so the training-time artifact loads identically) and then fetches the model.
+Build runs `scripts/render_build.sh`, which installs `src/backend/requirements.txt` (already pinned to the same torch/transformers/shap versions as `src/ml/requirements.txt`, so the training-time artifact loads identically) and then fetches the model.
 
 ### Frontend → Vercel
 
-`frontend/vercel.json` sets a catch-all rewrite to `/index.html` for React Router. Set `VITE_API_URL` to the Render API URL in Vercel's environment variables.
+`src/frontend/vercel.json` sets a catch-all rewrite to `/index.html` for React Router. Set `VITE_API_URL` to the Render API URL in Vercel's environment variables.
 
 ### CORS
 
@@ -431,19 +483,17 @@ Build runs `Project/scripts/render_build.sh`, which installs `backend/requiremen
 
 ---
 
-## Project structure
+## Detailed source layout
 
 ```
-Project/
+src/
 ├── ml/                          # Training pipeline
 │   ├── data_prep.py              # GoEmotions + Amazon Reviews preparation
 │   ├── train_roberta.py          # Multi-label RoBERTa fine-tuning
 │   ├── evaluate.py               # Per-label threshold tuning + test metrics
 │   ├── shap_explainer.py         # SHAP attribution logic (shared with backend)
 │   ├── emotion_labels.py         # Canonical label order + business bucket map
-│   ├── configs/train_config.yaml
-│   ├── MODEL_CARD.md             # Per-label metrics + limitations
-│   └── artifacts/                # Trained model output (gitignored)
+│   └── configs/train_config.yaml
 ├── backend/                     # FastAPI app
 │   ├── app/
 │   │   ├── main.py               # App factory, lifespan, router registration
@@ -453,22 +503,22 @@ Project/
 │   │   ├── schemas/              # Pydantic request/response models
 │   │   └── services/             # emotion_model, shap_service, segmentation, cache, celery_app
 │   └── tests/                    # 42 tests against the real checkpoint
-├── frontend/                    # React + Vite app
-│   └── src/
-│       ├── pages/                # Analyze, Dashboard, Batch, Model
-│       ├── components/           # Charts, table, heatmap + ui/ primitives
-│       └── lib/                  # api client, emotion/bucket helpers, utils
-├── scripts/                     # render_build.sh, fetch_model.sh
-└── docker-compose.yml           # postgres, redis, backend, celery_worker, frontend
+└── frontend/                    # React + Vite app
+    └── src/
+        ├── pages/                # Analyze, Dashboard, Batch, Model
+        ├── components/           # Charts, table, heatmap + ui/ primitives
+        └── lib/                  # api client, emotion/bucket helpers, utils
 ```
 
-`ml/emotion_labels.py` is the single source of truth for label order. Changing that order silently invalidates trained checkpoints — see [Design decisions](#design-decisions).
+Outside `src/`: `data/` (datasets), `results/ml-artifacts/` (trained weights + metrics, gitignored weights), `docs/` (`MODEL_CARD.md`, `COMPARISON.md`, source papers), `reports/` (review submission materials), `scripts/` (`render_build.sh`, `fetch_model.sh`), `docker-compose.yml`.
+
+`src/ml/emotion_labels.py` is the single source of truth for label order. Changing that order silently invalidates trained checkpoints — see [Design decisions](#design-decisions).
 
 ---
 
 ## Troubleshooting
 
-**`/api/predict` returns 503 `model not loaded`.** No valid artifact at `MODEL_DIR`. Check `GET /health` — if `model_loaded` is `false`, confirm `ml/artifacts/model-v1/` exists and contains the weights plus `thresholds.json`. Backend logs record the load failure with a stack trace at startup.
+**`/api/predict` returns 503 `model not loaded`.** No valid artifact at `MODEL_DIR`. Check `GET /health` — if `model_loaded` is `false`, confirm `results/ml-artifacts/model-v1/` exists and contains the weights plus `thresholds.json`. Backend logs record the load failure with a stack trace at startup.
 
 **Predictions work but nothing appears in the Dashboard.** Check `db_ready` on `/health`. The app starts without Postgres by design; analysis succeeds and persistence fails silently in that state.
 

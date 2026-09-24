@@ -1,11 +1,11 @@
-# Build context MUST be the repo root (not backend/), because this image
-# also needs ml/ (emotion_labels.py, and shap_explainer.py for app/services/
-# shap_service.py). docker-compose.yml sets:
+# Build context MUST be the repo root (not src/backend/), because this image
+# also needs src/ml/ (emotion_labels.py, and shap_explainer.py for
+# app/services/shap_service.py). docker-compose.yml sets:
 #   build:
 #     context: .
-#     dockerfile: backend/Dockerfile
-# Do not `docker build backend/` directly with this Dockerfile — ml/ won't
-# be in the build context and the COPY below will fail.
+#     dockerfile: src/backend/Dockerfile
+# Do not `docker build src/backend/` directly with this Dockerfile — src/ml/
+# won't be in the build context and the COPY below will fail.
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -20,21 +20,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt /app/backend/requirements.txt
+COPY src/backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-COPY backend/app /app/app
-COPY ml /app/ml
+COPY src/backend/app /app/app
+COPY src/ml /app/ml
 COPY scripts /app/scripts
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    MODEL_DIR=/app/ml/artifacts/model-v1
+    MODEL_DIR=/app/results/ml-artifacts/model-v1
 
-# The weights are gitignored, so `COPY ml` above brings the package but not
-# ml/artifacts/model-v1/. Bake them in at build time instead: baking beats
-# fetching on startup because Render's disk is ephemeral, so a runtime fetch
-# would re-download ~479MB on every restart and blow the health-check window.
+# The weights are gitignored, so nothing above brings in
+# results/ml-artifacts/model-v1/. Bake them in at build time instead: baking
+# beats fetching on startup because Render's disk is ephemeral, so a runtime
+# fetch would re-download ~479MB on every restart and blow the health-check
+# window.
 #
 # Pass MODEL_URL as a build arg (Render forwards service env vars to the
 # build). Left unset, the build still succeeds and the image simply ships
@@ -43,7 +44,7 @@ ENV PYTHONUNBUFFERED=1 \
 # a different matter and fails the build loudly, via fetch_model.sh.
 ARG MODEL_URL
 RUN if [ -n "$MODEL_URL" ]; then \
-      MODEL_URL="$MODEL_URL" MODEL_DIR=/app/ml/artifacts/model-v1 \
+      MODEL_URL="$MODEL_URL" MODEL_DIR=/app/results/ml-artifacts/model-v1 \
         /app/scripts/fetch_model.sh; \
     else \
       echo "WARNING: MODEL_URL not set — image ships without weights; /predict will 503"; \
