@@ -6,6 +6,7 @@ import LiveAnalysisPanel from "../components/LiveAnalysisPanel.jsx";
 import SentimentMismatchHint, { getMismatch } from "../components/SentimentMismatchHint.jsx";
 import useLiveAnalysis from "../hooks/useLiveAnalysis.js";
 import { analyzeReview } from "../lib/api.js";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { DEMO_PRODUCTS } from "../lib/demoProducts.js";
 
 /**
@@ -80,6 +81,10 @@ export default function Analyze() {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title="Analyze a review"
+        description="Write a customer review and watch the model read its emotions, sentence by sentence, as you type."
+      />
       <nav aria-label="Breadcrumb" className="text-xs text-slate-500">
         <ol className="flex flex-wrap items-center gap-1.5">
           {["Electronics", product.brand, "Customer reviews"].map((crumb, i, all) => (
@@ -88,7 +93,7 @@ export default function Analyze() {
                 className={
                   i === all.length - 1
                     ? "font-medium text-slate-700"
-                    : "cursor-default transition-colors hover:text-orange-600"
+                    : "cursor-default transition-colors hover:text-indigo-600"
                 }
               >
                 {crumb}
@@ -126,7 +131,7 @@ export default function Analyze() {
         />
 
         {/* Sticky on desktop so the live result stays in view while typing. */}
-        <div className="lg:sticky lg:top-6">
+        <div className="lg:sticky lg:top-20">
           <LiveAnalysisPanel
             enabled={analysis.enabled}
             result={analysis.result}

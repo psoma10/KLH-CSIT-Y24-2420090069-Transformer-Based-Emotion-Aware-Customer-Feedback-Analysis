@@ -6,10 +6,18 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const API_PREFIX = "/api";
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: options.body instanceof FormData ? undefined : { "Content-Type": "application/json" },
-    ...options,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      headers: options.body instanceof FormData ? undefined : { "Content-Type": "application/json" },
+      ...options,
+    });
+  } catch {
+    // fetch rejects (TypeError) when the server is unreachable / CORS-blocked.
+    const error = new Error("Cannot reach the backend API. Is it running?");
+    error.status = 0;
+    throw error;
+  }
 
   if (!res.ok) {
     let detail = res.statusText;

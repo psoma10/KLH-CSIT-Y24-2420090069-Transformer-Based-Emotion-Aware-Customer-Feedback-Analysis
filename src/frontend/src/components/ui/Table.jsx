@@ -9,12 +9,12 @@ export function Table({ className, children }) {
 }
 
 export function Thead({ children }) {
-  return <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">{children}</thead>;
+  return <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</thead>;
 }
 
 export function Th({ className, children, ...props }) {
   return (
-    <th className={cn("px-3 py-2 font-semibold", className)} {...props}>
+    <th className={cn("px-4 py-2.5 font-semibold", className)} {...props}>
       {children}
     </th>
   );
@@ -26,7 +26,7 @@ export function Tbody({ children }) {
 
 export function Td({ className, children, ...props }) {
   return (
-    <td className={cn("px-3 py-2 align-top", className)} {...props}>
+    <td className={cn("px-4 py-3 align-top", className)} {...props}>
       {children}
     </td>
   );

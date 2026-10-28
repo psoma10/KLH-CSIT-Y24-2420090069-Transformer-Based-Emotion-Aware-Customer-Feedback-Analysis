@@ -16,9 +16,9 @@ export default function SegmentBreakdown({ segments, overallIndex, isMixed }) {
   if (!segments || segments.length < 2) return null;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h3 className="text-sm font-semibold text-slate-900">
           Breakdown by sentence
         </h3>
         {isMixed && (

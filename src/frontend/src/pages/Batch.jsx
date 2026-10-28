@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { uploadBatch, getJob, getReviews } from "../lib/api.js";
 import Card, { CardTitle } from "../components/ui/Card.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import Button from "../components/ui/Button.jsx";
 import ProgressBar from "../components/ui/ProgressBar.jsx";
 import BucketDonut from "../components/BucketDonut.jsx";
@@ -78,13 +79,13 @@ function DropZone({ file, onFile, disabled }) {
       className={cn(
         "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors",
         disabled && "cursor-not-allowed opacity-60",
-        isDragging ? "border-slate-500 bg-slate-50" : "border-slate-300 hover:border-slate-400"
+        isDragging ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-slate-50/50 hover:border-indigo-400 hover:bg-indigo-50/40"
       )}
     >
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="h-8 w-8 text-slate-400"
+        className="h-10 w-10 text-indigo-400"
         fill="none"
         stroke="currentColor"
         strokeWidth={1.5}
@@ -96,7 +97,10 @@ function DropZone({ file, onFile, disabled }) {
         />
       </svg>
       {file ? (
-        <p className="text-sm font-medium text-slate-900">{file.name}</p>
+        <>
+          <p className="max-w-full truncate text-sm font-medium text-slate-900">{file.name}</p>
+          <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB - click or drop to replace</p>
+        </>
       ) : (
         <>
           <p className="text-sm font-medium text-slate-700">
@@ -145,50 +149,64 @@ export default function Batch() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title="Batch upload"
+        description="Upload a CSV of reviews to classify them in the background and see the bucket mix."
+      />
+      <div className="space-y-6">
       <Card>
         <CardTitle>Upload a review CSV</CardTitle>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-slate-500">
             Columns required:{" "}
-            <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">
+            <code className="break-words rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
               review_id, product_id, review_text, star_rating, review_date
             </code>
           </p>
           <button
             type="button"
             onClick={downloadSampleCsv}
-            className="whitespace-nowrap text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+            className="whitespace-nowrap text-xs font-medium text-indigo-600 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800"
           >
             Download sample CSV
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <DropZone file={file} onFile={setFile} disabled={uploadMutation.isPending} />
-          <Button type="submit" disabled={!file || uploadMutation.isPending}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={!file || uploadMutation.isPending}>
             {uploadMutation.isPending ? "Uploading…" : "Upload & process"}
           </Button>
         </form>
-        {uploadMutation.isError && <p className="mt-2 text-sm text-red-700">{uploadMutation.error.message}</p>}
+        {uploadMutation.isError && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{uploadMutation.error.message}</p>}
       </Card>
 
       {jobId && (
         <Card>
-          <CardTitle>Job {jobId}</CardTitle>
-          {jobQuery.isLoading && <p className="text-sm text-slate-500">Fetching job status…</p>}
+          <CardTitle>Processing job <span className="font-mono text-slate-500">{jobId}</span></CardTitle>
+          {jobQuery.isLoading && <div className="h-10 animate-pulse rounded-lg bg-slate-100" />}
           {jobQuery.isError && <p className="text-sm text-red-700">{jobQuery.error.message}</p>}
           {job && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium capitalize">{job.status}</span>
-                <span className="text-slate-500">
-                  ({job.processed_rows} / {job.total_rows} rows)
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
+                    job.status === "done" && "bg-green-100 text-green-700",
+                    job.status === "failed" && "bg-red-100 text-red-700",
+                    job.status !== "done" && job.status !== "failed" && "bg-indigo-100 text-indigo-700"
+                  )}
+                >
+                  {job.status}
+                </span>
+                <span className="tabular-nums text-slate-500">
+                  {job.processed_rows} / {job.total_rows} rows
                 </span>
               </div>
               <ProgressBar
                 value={job.processed_rows}
                 max={job.total_rows}
-                barClassName={job.status === "failed" ? "bg-red-600" : "bg-slate-900"}
+                barClassName={job.status === "failed" ? "bg-red-600" : "bg-indigo-600"}
               />
               {job.status === "done" && (
                 <p className="text-sm text-green-700">
@@ -204,7 +222,7 @@ export default function Batch() {
       {job?.status === "done" && (
         <Card>
           <CardTitle>Results</CardTitle>
-          {results.isLoading && <p className="text-sm text-slate-500">Loading results…</p>}
+          {results.isLoading && <div className="h-56 animate-pulse rounded-lg bg-slate-100" />}
           {results.isError && (
             <p className="text-sm text-amber-700">
               Rows processed, but the results summary couldn't load: {results.error.message}
@@ -215,9 +233,10 @@ export default function Batch() {
               No confident predictions in this batch — every row landed under its threshold.
             </p>
           )}
-          {results.buckets.length > 0 && <BucketDonut buckets={results.buckets} height={220} />}
+          {results.buckets.length > 0 && <BucketDonut buckets={results.buckets} height={280} />}
         </Card>
       )}
+      </div>
     </div>
   );
 }

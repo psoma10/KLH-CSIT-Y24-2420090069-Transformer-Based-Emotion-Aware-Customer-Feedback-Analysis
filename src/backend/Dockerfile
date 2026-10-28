@@ -21,7 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY src/backend/requirements.txt /app/backend/requirements.txt
-RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+# CPU-only torch: the default PyPI wheel drags in ~2GB of CUDA libraries that a
+# CPU container never uses. Installed first so requirements.txt's pin is already
+# satisfied.
+RUN pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu  && pip install --no-cache-dir -r /app/backend/requirements.txt
 
 COPY src/backend/app /app/app
 COPY src/ml /app/ml

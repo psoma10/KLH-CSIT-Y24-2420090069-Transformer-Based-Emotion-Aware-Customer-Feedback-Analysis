@@ -60,7 +60,7 @@ def test_limiter_window_expires():
 
     import time
 
-    time.sleep(0.06)
+    time.sleep(0.15)
     limiter.check(request)  # window rolled over; must not raise
 
 

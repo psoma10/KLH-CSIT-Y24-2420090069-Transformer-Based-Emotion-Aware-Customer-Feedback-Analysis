@@ -11,12 +11,12 @@ function PanelShell({ title, aside, children, className }) {
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6",
+        "rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6",
         className
       )}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h3 className="text-sm font-semibold text-slate-900">
           {title}
         </h3>
         {aside}
@@ -251,9 +251,9 @@ export default function LiveAnalysisPanel({
       />
       {/* Collapsed by default: the full 28-bar chart is taller than the
           viewport and would otherwise defeat the sticky column. */}
-      <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:p-6">
-          <span className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <details className="group rounded-xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl p-5 transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:p-6">
+          <span className="text-sm font-semibold text-slate-900">
             All 28 emotion scores
           </span>
           <span className="flex items-center gap-2">

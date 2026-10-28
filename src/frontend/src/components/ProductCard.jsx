@@ -33,7 +33,7 @@ function ProductSwitcher({ products, selectedId, onSelect }) {
     <div
       role="tablist"
       aria-label="Choose a demo product"
-      className="flex gap-2"
+      className="flex flex-wrap gap-2"
     >
       {products.map((p) => {
         const active = p.id === selectedId;
@@ -48,9 +48,9 @@ function ProductSwitcher({ products, selectedId, onSelect }) {
             className={cn(
               "flex h-14 w-14 items-center justify-center rounded-lg border-2 text-2xl transition-all duration-200 ease-out",
               "hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
               active
-                ? "border-orange-400 bg-orange-50 shadow-sm ring-1 ring-orange-200"
+                ? "border-indigo-500 bg-indigo-50 shadow-sm ring-1 ring-indigo-200"
                 : "border-slate-200 bg-white opacity-70 hover:opacity-100"
             )}
           >
@@ -72,7 +72,7 @@ function ProductCard({ products, product, onSelect }) {
   return (
     <section
       aria-label="Product details"
-      className="group grid gap-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]"
+      className="group grid gap-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:gap-8 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]"
     >
       <div className="space-y-4">
         <ProductImage product={product} />
@@ -84,13 +84,13 @@ function ProductCard({ products, product, onSelect }) {
           <a
             href="#!"
             onClick={(e) => e.preventDefault()}
-            className="text-sm font-medium text-sky-700 transition-colors hover:text-orange-600 hover:underline"
+            className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-600 hover:underline"
           >
             Visit the {product.brand} Store
           </a>
-          <h1 className="text-xl font-semibold leading-snug text-slate-900 sm:text-2xl">
+          <h2 className="text-xl font-semibold leading-snug text-slate-900 sm:text-2xl">
             {product.title}
-          </h1>
+          </h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -102,7 +102,7 @@ function ProductCard({ products, product, onSelect }) {
             size="md"
             label={`${product.rating} out of 5 stars, ${formatCount(product.ratingCount)} ratings`}
           />
-          <span className="text-sm text-sky-700 transition-colors hover:text-orange-600 hover:underline">
+          <span className="text-sm text-indigo-600 transition-colors hover:text-indigo-600 hover:underline">
             {formatCount(product.ratingCount)} ratings
           </span>
         </div>
@@ -123,7 +123,7 @@ function ProductCard({ products, product, onSelect }) {
 
         <p
           className={cn(
-            "text-lg font-medium",
+            "text-base font-medium",
             product.inStock ? "text-green-700" : "text-red-700"
           )}
         >
@@ -143,7 +143,7 @@ function ProductCard({ products, product, onSelect }) {
         </ul>
 
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">Customer reviews</h2>
+          <h3 className="mb-3 text-sm font-semibold text-slate-900">Customer reviews</h3>
           <RatingHistogram histogram={product.histogram} />
         </div>
       </div>

@@ -30,10 +30,10 @@ export default function ReviewComposer({
   return (
     <section
       aria-labelledby="composer-heading"
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
     >
-      <header className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white px-5 py-4 sm:px-7">
-        <h2 id="composer-heading" className="text-lg font-semibold text-slate-900">
+      <header className="border-b border-slate-200 px-5 py-4 sm:px-6">
+        <h2 id="composer-heading" className="text-base font-semibold text-slate-900">
           Write a customer review
         </h2>
         <p className="mt-0.5 text-sm text-slate-500">
@@ -43,7 +43,7 @@ export default function ReviewComposer({
         </p>
       </header>
 
-      <div className="space-y-6 px-5 py-6 sm:px-7">
+      <div className="space-y-6 px-5 py-5 sm:px-6">
         <fieldset className="space-y-2.5">
           <legend className="text-sm font-semibold text-slate-900">
             Overall rating
@@ -81,12 +81,12 @@ export default function ReviewComposer({
               <span
                 aria-hidden={!isAnalyzing}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2 py-0.5 font-medium text-sky-700 ring-1 ring-sky-200",
+                  "inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 ring-1 ring-indigo-200",
                   "transition-opacity duration-300 motion-reduce:transition-none",
                   isAnalyzing ? "opacity-100" : "opacity-0"
                 )}
               >
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
                 Analyzing…
               </span>
               <span className="tabular-nums text-slate-400">
@@ -117,7 +117,7 @@ export default function ReviewComposer({
           <Button
             onClick={onSubmit}
             disabled={!rating || !body.trim() || isSubmitting}
-            className="rounded-full bg-gradient-to-b from-amber-300 to-amber-400 px-8 text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-px hover:from-amber-200 hover:to-amber-300 hover:shadow-md active:translate-y-0 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            className="px-6"
           >
             {isSubmitting ? "Submitting…" : "Submit"}
           </Button>

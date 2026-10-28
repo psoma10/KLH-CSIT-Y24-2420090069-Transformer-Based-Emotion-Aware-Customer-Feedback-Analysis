@@ -8,6 +8,9 @@ directly, so there is exactly one place that defines what config exists.
 from functools import lru_cache
 from pathlib import Path
 
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +28,28 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/emotion_feedback"
 
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_database_url(cls, url: str) -> str:
+        """Accept a plain provider URL (e.g. Neon's postgresql://...?sslmode=require).
+
+        asyncpg takes `ssl=` rather than libpq's `sslmode=` and rejects
+        `channel_binding`, so rewrite the scheme and query for it.
+        """
+        parts = urlsplit(url)
+        scheme = parts.scheme
+        if scheme in ("postgres", "postgresql"):
+            scheme = "postgresql+asyncpg"
+        if scheme != "postgresql+asyncpg":
+            return url
+        query = []
+        for k, v in parse_qsl(parts.query):
+            if k == "sslmode":
+                query.append(("ssl", v))
+            elif k != "channel_binding":
+                query.append((k, v))
+        return urlunsplit(parts._replace(scheme=scheme, query=urlencode(query)))
+
     # Redis / Celery
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
@@ -40,7 +65,7 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:5173"
 
     # App
-    model_version: str = "model-v1"
+    model_version: str = "RoBERTa-base"
     api_v1_prefix: str = "/api"
 
 

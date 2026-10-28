@@ -21,11 +21,11 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.core.ml_path import ML_DIR  # noqa: E402
 
-MODEL_DIR = (ML_DIR / "artifacts" / "model-v1") if ML_DIR else None
+MODEL_DIR = (ML_DIR.parents[1] / "results" / "ml-artifacts" / "model-v1") if ML_DIR else None
 
 requires_model = pytest.mark.skipif(
-    MODEL_DIR is None or not (MODEL_DIR / "config.json").is_file(),
-    reason="no trained artifact at ml/artifacts/model-v1 (train first — see ml/train_roberta.py)",
+    MODEL_DIR is None or not (MODEL_DIR / "model.safetensors").is_file(),
+    reason="no trained artifact at results/ml-artifacts/model-v1/model.safetensors (train first — see ml/train_roberta.py)",
 )
 
 

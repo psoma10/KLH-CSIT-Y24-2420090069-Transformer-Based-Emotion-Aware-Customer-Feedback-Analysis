@@ -6,21 +6,26 @@ import { cn } from "../lib/utils.js";
  */
 export default function RatingHistogram({ histogram, className }) {
   return (
-    <ul className={cn("space-y-1.5", className)}>
+    <ul className={cn("space-y-2", className)}>
       {[5, 4, 3, 2, 1].map((star) => {
         const pct = histogram[star] ?? 0;
         return (
-          <li key={star} className="group flex items-center gap-3">
-            <span className="w-12 shrink-0 text-xs font-medium text-sky-700 transition-colors group-hover:text-orange-600 group-hover:underline">
-              {star} star
-            </span>
-            <span className="h-4 flex-1 overflow-hidden rounded-sm border border-slate-300 bg-slate-100">
+          <li key={star} className="flex items-center gap-3">
+            <span className="w-12 shrink-0 text-xs font-medium text-slate-600">{star} star</span>
+            <span
+              className="h-3 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100"
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${star} star`}
+            >
               <span
-                className="block h-full rounded-l-sm bg-gradient-to-r from-amber-400 to-amber-500 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                className="block h-full rounded-full bg-amber-400 transition-[width] duration-500 ease-out motion-reduce:transition-none"
                 style={{ width: `${pct}%` }}
               />
             </span>
-            <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-slate-600">
+            <span className="w-10 shrink-0 text-right text-xs font-medium tabular-nums text-slate-600">
               {pct}%
             </span>
           </li>

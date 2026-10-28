@@ -47,7 +47,7 @@ celery_app.conf.update(
 # Sync engine for this task only — swap the async driver for the sync one.
 _SYNC_DATABASE_URL = settings.database_url.replace(
     "postgresql+asyncpg://", "postgresql+psycopg2://"
-)
+).replace("ssl=", "sslmode=")
 _sync_engine = create_engine(_SYNC_DATABASE_URL, pool_pre_ping=True)
 SyncSessionLocal = sessionmaker(bind=_sync_engine, expire_on_commit=False)
 

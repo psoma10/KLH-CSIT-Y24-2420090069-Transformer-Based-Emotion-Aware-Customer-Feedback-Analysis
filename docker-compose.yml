@@ -1,3 +1,29 @@
+# One-command start:   docker compose up --build
+#   frontend  http://localhost:${FRONTEND_PORT:-5173}
+#   API docs  http://localhost:${BACKEND_PORT:-8000}/docs
+#
+# Optional root .env (gitignored) overrides:
+#   DATABASE_URL   hosted Postgres such as Neon (plain postgresql://...?sslmode=require
+#                  works as-is); unset -> the bundled postgres service below
+#   FRONTEND_PORT / BACKEND_PORT   host ports if the defaults are taken
+#
+# Model weights are NOT baked into the image: results/ml-artifacts is mounted
+# read-only, so retraining (e.g. on Colab) only needs the new files dropped in
+# results/ml-artifacts/model-v1/ and `docker compose restart backend celery_worker`.
+
+x-backend-env: &backend-env
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/emotion_feedback}
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  # Comma-separated. Add the Vercel URL via VERCEL_ORIGIN in the root .env.
+  FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}${VERCEL_ORIGIN:+,${VERCEL_ORIGIN}}
+  # Behind the tunnel the real client IP arrives in X-Forwarded-For; trusting it is
+  # safe only because the backend port is published on loopback (see below).
+  FORWARDED_ALLOW_IPS: "*"
+  MODEL_DIR: /app/results/ml-artifacts/model-v1
+  MODEL_VERSION: RoBERTa-base
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -7,12 +33,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      # Bound to loopback: published as 0.0.0.0 these are a database and cache
-      # with default/no credentials, reachable by anyone who can route to the
-      # host. Only the backend needs them, and it reaches them over the compose
-      # network by service name, not through this mapping.
-      - "127.0.0.1:5432:5432"
+    # No published ports: only the backend/worker need it, over the compose network.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d emotion_feedback"]
       interval: 5s
@@ -21,8 +42,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -34,38 +53,31 @@ services:
       context: .
       dockerfile: src/backend/Dockerfile
     ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/emotion_feedback
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/2
-      FRONTEND_ORIGIN: http://localhost:5173
-      MODEL_DIR: /app/results/ml-artifacts/model-v1
-      MODEL_VERSION: model-v1
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    environment: *backend-env
     volumes:
-      - ./results/ml-artifacts:/app/results/ml-artifacts
+      - ./results/ml-artifacts:/app/results/ml-artifacts:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
 
   celery_worker:
     build:
       context: .
       dockerfile: src/backend/Dockerfile
-    command: celery -A app.services.celery_app worker --loglevel=info
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/emotion_feedback
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/2
-      FRONTEND_ORIGIN: http://localhost:5173
-      MODEL_DIR: /app/results/ml-artifacts/model-v1
-      MODEL_VERSION: model-v1
+    # concurrency=1: each prefork child loads its own copy of the ~500MB model.
+    command: celery -A app.services.celery_app worker --loglevel=info --concurrency=1
+    environment: *backend-env
     volumes:
-      - ./results/ml-artifacts:/app/results/ml-artifacts
+      - ./results/ml-artifacts:/app/results/ml-artifacts:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,12 +87,38 @@ services:
   frontend:
     build:
       context: ./src/frontend
+      args:
+        # Baked into the static bundle, so it must be the URL the *browser* uses.
+        VITE_API_URL: http://localhost:${BACKEND_PORT:-8000}
     ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8000
+      - "${FRONTEND_PORT:-5173}:5173"
     depends_on:
       - backend
+
+  # Optional public tunnel so a Vercel-hosted frontend can reach this PC.
+  # Stable URL (needs a Cloudflare account + a domain; hostname -> http://backend:8000
+  # is configured in the Zero Trust dashboard) -- token in the root .env:
+  #   docker compose --profile public up -d
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["public"]
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # No-account alternative: a random https://*.trycloudflare.com URL that changes
+  # on every restart (read it from `docker compose logs tunnel-quick`).
+  #   docker compose --profile quick up -d
+  tunnel-quick:
+    image: cloudflare/cloudflared:latest
+    profiles: ["quick"]
+    command: tunnel --no-autoupdate --url http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
