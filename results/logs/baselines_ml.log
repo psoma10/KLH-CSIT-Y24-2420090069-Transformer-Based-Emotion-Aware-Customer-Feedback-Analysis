@@ -1,0 +1,18 @@
+features: 124,051 dims (word block 58,338) in 9.6s
+== tfidf_lr
+  tfidf_lr {'C': 2.0} -> val macro-F1 0.4990
+  tfidf_lr {'C': 8.0} -> val macro-F1 0.4865
+[saved] results\predictions\tfidf_lr__seed42.npz
+== tfidf_svm
+  tfidf_svm {'C': 0.1} -> val macro-F1 0.5151
+  tfidf_svm {'C': 0.4} -> val macro-F1 0.5090
+[saved] results\predictions\tfidf_svm__seed42.npz
+== tfidf_nb
+  tfidf_nb {'alpha': 0.05} -> val macro-F1 0.3038
+  tfidf_nb {'alpha': 0.3} -> val macro-F1 0.2100
+[saved] results\predictions\tfidf_nb__seed42.npz
+== tfidf_rf
+  tfidf_rf {'n': 200} -> val macro-F1 0.4764
+[saved] results\predictions\tfidf_rf__seed42.npz
+== ml_ensemble -> val macro-F1 0.5072
+[saved] results\predictions\ml_ensemble__seed42.npz

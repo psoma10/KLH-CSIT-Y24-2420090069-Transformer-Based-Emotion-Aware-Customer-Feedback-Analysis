@@ -1,0 +1,10 @@
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\huggingface_hub\file_download.py:143: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\somap\.cache\huggingface\hub\models--bert-base-uncased. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+plain/bert-base-uncased: 109.5M params (0.61M in head), device cuda
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\transformers\models\bert\modeling_bert.py:439: UserWarning: 1Torch was not compiled with flash attention. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\transformers\cuda\sdp_utils.cpp:555.)
+  attn_output = torch.nn.functional.scaled_dot_product_attention(
+  epoch 1  train loss 0.1183  val macro PR-AUC 0.5182  (138s)
+  epoch 2  train loss 0.0791  val macro PR-AUC 0.5425  (283s)
+  epoch 3  train loss 0.0682  val macro PR-AUC 0.5468  (427s)
+  epoch 4  train loss 0.0588  val macro PR-AUC 0.5452  (573s)
+[saved] results\predictions\bert_plain__seed42.npz

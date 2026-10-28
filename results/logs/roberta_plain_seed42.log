@@ -1,0 +1,6 @@
+plain/roberta-base: 124.7M params (0.61M in head), device cuda
+  epoch 1  train loss 0.1215  val macro PR-AUC 0.5240  (174s)
+  epoch 2  train loss 0.0807  val macro PR-AUC 0.5455  (353s)
+  epoch 3  train loss 0.0720  val macro PR-AUC 0.5506  (534s)
+  epoch 4  train loss 0.0643  val macro PR-AUC 0.5456  (714s)
+[saved] results\predictions\roberta_plain__seed42.npz

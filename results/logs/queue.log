@@ -1,0 +1,212 @@
+plain/roberta-base: 124.7M params (0.61M in head), device cuda
+  epoch 1  train loss 0.1215  val macro PR-AUC 0.5240  (174s)
+  epoch 2  train loss 0.0807  val macro PR-AUC 0.5455  (353s)
+  epoch 3  train loss 0.0720  val macro PR-AUC 0.5506  (534s)
+  epoch 4  train loss 0.0643  val macro PR-AUC 0.5456  (714s)
+[saved] results\predictions\roberta_plain__seed42.npz
+[skip] roberta_bilstm_attn seed 42
+textcnn: vocab 13,653, device cuda
+  epoch  1  train loss 0.1384  val macro PR-AUC 0.2945
+  epoch  2  train loss 0.1140  val macro PR-AUC 0.3744
+  epoch  3  train loss 0.1043  val macro PR-AUC 0.4026
+  epoch  4  train loss 0.0957  val macro PR-AUC 0.4134
+  epoch  5  train loss 0.0891  val macro PR-AUC 0.4179
+  epoch  6  train loss 0.0826  val macro PR-AUC 0.4198
+  epoch  7  train loss 0.0756  val macro PR-AUC 0.4161
+  epoch  8  train loss 0.0700  val macro PR-AUC 0.4054
+  epoch  9  train loss 0.0651  val macro PR-AUC 0.4058
+  epoch 10  train loss 0.0609  val macro PR-AUC 0.3975
+[saved] results\predictions\textcnn__seed42.npz
+bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1389  val macro PR-AUC 0.2786
+  epoch  2  train loss 0.1078  val macro PR-AUC 0.3518
+  epoch  3  train loss 0.0988  val macro PR-AUC 0.3972
+  epoch  4  train loss 0.0929  val macro PR-AUC 0.4257
+  epoch  5  train loss 0.0880  val macro PR-AUC 0.4377
+  epoch  6  train loss 0.0839  val macro PR-AUC 0.4544
+  epoch  7  train loss 0.0796  val macro PR-AUC 0.4531
+  epoch  8  train loss 0.0762  val macro PR-AUC 0.4545
+  epoch  9  train loss 0.0726  val macro PR-AUC 0.4611
+  epoch 10  train loss 0.0695  val macro PR-AUC 0.4585
+  epoch 11  train loss 0.0664  val macro PR-AUC 0.4602
+  epoch 12  train loss 0.0637  val macro PR-AUC 0.4612
+  epoch 13  train loss 0.0608  val macro PR-AUC 0.4571
+  epoch 14  train loss 0.0583  val macro PR-AUC 0.4604
+  epoch 15  train loss 0.0560  val macro PR-AUC 0.4596
+  epoch 16  train loss 0.0538  val macro PR-AUC 0.4563
+[saved] results\predictions\bilstm__seed42.npz
+cnn_bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1508  val macro PR-AUC 0.2077
+  epoch  2  train loss 0.1186  val macro PR-AUC 0.2986
+  epoch  3  train loss 0.1080  val macro PR-AUC 0.3496
+  epoch  4  train loss 0.1015  val macro PR-AUC 0.3841
+  epoch  5  train loss 0.0968  val macro PR-AUC 0.3999
+  epoch  6  train loss 0.0931  val macro PR-AUC 0.4167
+  epoch  7  train loss 0.0897  val macro PR-AUC 0.4253
+  epoch  8  train loss 0.0867  val macro PR-AUC 0.4316
+  epoch  9  train loss 0.0838  val macro PR-AUC 0.4386
+  epoch 10  train loss 0.0810  val macro PR-AUC 0.4492
+  epoch 11  train loss 0.0786  val macro PR-AUC 0.4505
+  epoch 12  train loss 0.0761  val macro PR-AUC 0.4535
+  epoch 13  train loss 0.0740  val macro PR-AUC 0.4487
+  epoch 14  train loss 0.0719  val macro PR-AUC 0.4556
+  epoch 15  train loss 0.0697  val macro PR-AUC 0.4511
+  epoch 16  train loss 0.0675  val macro PR-AUC 0.4474
+  epoch 17  train loss 0.0658  val macro PR-AUC 0.4506
+  epoch 18  train loss 0.0640  val macro PR-AUC 0.4522
+[saved] results\predictions\cnn_bilstm__seed42.npz
+plain/roberta-base: 124.7M params (0.61M in head), device cuda
+  epoch 1  train loss 0.1228  val macro PR-AUC 0.5217  (178s)
+  epoch 2  train loss 0.0807  val macro PR-AUC 0.5487  (357s)
+  epoch 3  train loss 0.0719  val macro PR-AUC 0.5443  (534s)
+  epoch 4  train loss 0.0642  val macro PR-AUC 0.5462  (709s)
+[saved] results\predictions\roberta_plain__seed43.npz
+hybrid/roberta-base: 126.2M params (2.15M in head), device cuda
+  epoch 1  train loss 0.1194  val macro PR-AUC 0.5382  (189s)
+  epoch 2  train loss 0.0796  val macro PR-AUC 0.5553  (377s)
+  epoch 3  train loss 0.0707  val macro PR-AUC 0.5559  (567s)
+  epoch 4  train loss 0.0632  val macro PR-AUC 0.5528  (747s)
+[saved] results\predictions\roberta_bilstm_attn__seed43.npz
+textcnn: vocab 13,653, device cuda
+  epoch  1  train loss 0.1394  val macro PR-AUC 0.2929
+  epoch  2  train loss 0.1139  val macro PR-AUC 0.3685
+  epoch  3  train loss 0.1039  val macro PR-AUC 0.4045
+  epoch  4  train loss 0.0962  val macro PR-AUC 0.4127
+  epoch  5  train loss 0.0889  val macro PR-AUC 0.4173
+  epoch  6  train loss 0.0822  val macro PR-AUC 0.4155
+  epoch  7  train loss 0.0761  val macro PR-AUC 0.4089
+  epoch  8  train loss 0.0703  val macro PR-AUC 0.4020
+  epoch  9  train loss 0.0647  val macro PR-AUC 0.3972
+[saved] results\predictions\textcnn__seed43.npz
+bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1387  val macro PR-AUC 0.2766
+  epoch  2  train loss 0.1080  val macro PR-AUC 0.3529
+  epoch  3  train loss 0.0988  val macro PR-AUC 0.3930
+  epoch  4  train loss 0.0922  val macro PR-AUC 0.4207
+  epoch  5  train loss 0.0873  val macro PR-AUC 0.4383
+  epoch  6  train loss 0.0830  val macro PR-AUC 0.4533
+  epoch  7  train loss 0.0789  val macro PR-AUC 0.4503
+  epoch  8  train loss 0.0752  val macro PR-AUC 0.4576
+  epoch  9  train loss 0.0717  val macro PR-AUC 0.4600
+  epoch 10  train loss 0.0685  val macro PR-AUC 0.4562
+  epoch 11  train loss 0.0653  val macro PR-AUC 0.4614
+  epoch 12  train loss 0.0627  val macro PR-AUC 0.4595
+  epoch 13  train loss 0.0595  val macro PR-AUC 0.4574
+  epoch 14  train loss 0.0573  val macro PR-AUC 0.4496
+  epoch 15  train loss 0.0549  val macro PR-AUC 0.4490
+[saved] results\predictions\bilstm__seed43.npz
+cnn_bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1509  val macro PR-AUC 0.1922
+  epoch  2  train loss 0.1192  val macro PR-AUC 0.2918
+  epoch  3  train loss 0.1087  val macro PR-AUC 0.3490
+  epoch  4  train loss 0.1020  val macro PR-AUC 0.3791
+  epoch  5  train loss 0.0975  val macro PR-AUC 0.4038
+  epoch  6  train loss 0.0936  val macro PR-AUC 0.4177
+  epoch  7  train loss 0.0901  val macro PR-AUC 0.4280
+  epoch  8  train loss 0.0871  val macro PR-AUC 0.4383
+  epoch  9  train loss 0.0843  val macro PR-AUC 0.4415
+  epoch 10  train loss 0.0814  val macro PR-AUC 0.4456
+  epoch 11  train loss 0.0790  val macro PR-AUC 0.4432
+  epoch 12  train loss 0.0769  val macro PR-AUC 0.4485
+  epoch 13  train loss 0.0746  val macro PR-AUC 0.4502
+  epoch 14  train loss 0.0725  val macro PR-AUC 0.4473
+  epoch 15  train loss 0.0706  val macro PR-AUC 0.4478
+  epoch 16  train loss 0.0684  val macro PR-AUC 0.4431
+  epoch 17  train loss 0.0663  val macro PR-AUC 0.4463
+[saved] results\predictions\cnn_bilstm__seed43.npz
+plain/roberta-base: 124.7M params (0.61M in head), device cuda
+  epoch 1  train loss 0.1206  val macro PR-AUC 0.5226  (178s)
+  epoch 2  train loss 0.0804  val macro PR-AUC 0.5415  (356s)
+  epoch 3  train loss 0.0718  val macro PR-AUC 0.5511  (532s)
+  epoch 4  train loss 0.0642  val macro PR-AUC 0.5507  (709s)
+[saved] results\predictions\roberta_plain__seed44.npz
+hybrid/roberta-base: 126.2M params (2.15M in head), device cuda
+  epoch 1  train loss 0.1191  val macro PR-AUC 0.5273  (181s)
+  epoch 2  train loss 0.0794  val macro PR-AUC 0.5562  (366s)
+  epoch 3  train loss 0.0709  val macro PR-AUC 0.5547  (551s)
+  epoch 4  train loss 0.0636  val macro PR-AUC 0.5536  (728s)
+[saved] results\predictions\roberta_bilstm_attn__seed44.npz
+textcnn: vocab 13,653, device cuda
+  epoch  1  train loss 0.1386  val macro PR-AUC 0.2942
+  epoch  2  train loss 0.1137  val macro PR-AUC 0.3703
+  epoch  3  train loss 0.1042  val macro PR-AUC 0.3901
+  epoch  4  train loss 0.0962  val macro PR-AUC 0.4113
+  epoch  5  train loss 0.0890  val macro PR-AUC 0.4134
+  epoch  6  train loss 0.0821  val macro PR-AUC 0.4143
+  epoch  7  train loss 0.0759  val macro PR-AUC 0.3999
+  epoch  8  train loss 0.0702  val macro PR-AUC 0.3976
+  epoch  9  train loss 0.0652  val macro PR-AUC 0.3867
+  epoch 10  train loss 0.0605  val macro PR-AUC 0.3896
+[saved] results\predictions\textcnn__seed44.npz
+bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1388  val macro PR-AUC 0.2711
+  epoch  2  train loss 0.1083  val macro PR-AUC 0.3502
+  epoch  3  train loss 0.0994  val macro PR-AUC 0.3951
+  epoch  4  train loss 0.0932  val macro PR-AUC 0.4245
+  epoch  5  train loss 0.0880  val macro PR-AUC 0.4438
+  epoch  6  train loss 0.0838  val macro PR-AUC 0.4558
+  epoch  7  train loss 0.0796  val macro PR-AUC 0.4517
+  epoch  8  train loss 0.0763  val macro PR-AUC 0.4593
+  epoch  9  train loss 0.0727  val macro PR-AUC 0.4592
+  epoch 10  train loss 0.0695  val macro PR-AUC 0.4564
+  epoch 11  train loss 0.0666  val macro PR-AUC 0.4540
+  epoch 12  train loss 0.0638  val macro PR-AUC 0.4540
+[saved] results\predictions\bilstm__seed44.npz
+cnn_bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1498  val macro PR-AUC 0.2043
+  epoch  2  train loss 0.1184  val macro PR-AUC 0.2878
+  epoch  3  train loss 0.1086  val macro PR-AUC 0.3429
+  epoch  4  train loss 0.1022  val macro PR-AUC 0.3813
+  epoch  5  train loss 0.0970  val macro PR-AUC 0.4072
+  epoch  6  train loss 0.0928  val macro PR-AUC 0.4204
+  epoch  7  train loss 0.0892  val macro PR-AUC 0.4346
+  epoch  8  train loss 0.0861  val macro PR-AUC 0.4366
+  epoch  9  train loss 0.0834  val macro PR-AUC 0.4405
+  epoch 10  train loss 0.0805  val macro PR-AUC 0.4463
+  epoch 11  train loss 0.0781  val macro PR-AUC 0.4485
+  epoch 12  train loss 0.0758  val macro PR-AUC 0.4440
+  epoch 13  train loss 0.0735  val macro PR-AUC 0.4471
+  epoch 14  train loss 0.0715  val macro PR-AUC 0.4428
+  epoch 15  train loss 0.0693  val macro PR-AUC 0.4410
+[saved] results\predictions\cnn_bilstm__seed44.npz
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\huggingface_hub\file_download.py:143: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\somap\.cache\huggingface\hub\models--bert-base-uncased. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+plain/bert-base-uncased: 109.5M params (0.61M in head), device cuda
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\transformers\models\bert\modeling_bert.py:439: UserWarning: 1Torch was not compiled with flash attention. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\transformers\cuda\sdp_utils.cpp:555.)
+  attn_output = torch.nn.functional.scaled_dot_product_attention(
+  epoch 1  train loss 0.1183  val macro PR-AUC 0.5182  (138s)
+  epoch 2  train loss 0.0791  val macro PR-AUC 0.5425  (283s)
+  epoch 3  train loss 0.0682  val macro PR-AUC 0.5468  (427s)
+  epoch 4  train loss 0.0588  val macro PR-AUC 0.5452  (573s)
+[saved] results\predictions\bert_plain__seed42.npz
+roberta_plain seed 42: w=0.35  val macro-F1 0.5609 (w=0: 0.5579)
+[saved] results\predictions\roberta_plain+ml__seed42.npz
+roberta_plain seed 43: w=0.50  val macro-F1 0.5627 (w=0: 0.5546)
+[saved] results\predictions\roberta_plain+ml__seed43.npz
+roberta_plain seed 44: w=0.45  val macro-F1 0.5620 (w=0: 0.5576)
+[saved] results\predictions\roberta_plain+ml__seed44.npz
+roberta_bilstm_attn seed 42: w=0.05  val macro-F1 0.5699 (w=0: 0.5695)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed42.npz
+roberta_bilstm_attn seed 43: w=0.50  val macro-F1 0.5686 (w=0: 0.5595)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed43.npz
+roberta_bilstm_attn seed 44: w=0.35  val macro-F1 0.5672 (w=0: 0.5605)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed44.npz
+bert_plain seed 42: w=0.40  val macro-F1 0.5649 (w=0: 0.5571)
+[saved] results\predictions\bert_plain+ml__seed42.npz
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\src\ml\compare.py:150: RuntimeWarning: Mean of empty slice
+  avg = lambda k: np.nanmean([m.get(k) if m.get(k) is not None else np.nan for m in metas])
+bootstrapping tfidf_lr (seed 42) ...
+bootstrapping tfidf_svm (seed 42) ...
+bootstrapping tfidf_nb (seed 42) ...
+bootstrapping tfidf_rf (seed 42) ...
+bootstrapping ml_ensemble (seed 42) ...
+bootstrapping textcnn (seed 42) ...
+bootstrapping bilstm (seed 42) ...
+bootstrapping cnn_bilstm (seed 42) ...
+bootstrapping bert_plain (seed 42) ...
+bootstrapping roberta_plain (seed 42) ...
+bootstrapping roberta_plain+ml (seed 42) ...
+bootstrapping roberta_bilstm_attn (seed 42) ...
+bootstrapping roberta_bilstm_attn+ml (seed 42) ...
+
+Wrote results to A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\results\comparison

@@ -1,9 +1,94 @@
-# Model card — `model-v1`
+# Model card — `model-v1` and the evaluated model family
 
 Fine-tuned RoBERTa multi-label emotion classifier used by the API and the
 Celery batch worker. The weights themselves are not in git (≈480MB, see
 `.gitignore`); this file records what was trained and how well it scored so
 the numbers survive independently of the artifact.
+
+This card covers two things, kept separate on purpose:
+
+1. **`model-v1`** (sections "What it is" onward): the checkpoint the app serves.
+2. **The comparison study** (next section): a broader set of baselines and
+   hybrid architectures, including the proposed RoBERTa-BiLSTM-Attention +
+   TF-IDF ML hybrid, scored with an extended metric suite. The hybrid is
+   evaluated from saved probabilities only; **it is not a deployed checkpoint**.
+
+## Comparison study: proposed hybrid and baselines
+
+Added in response to the reviewer comment that a single model is not a
+sufficient baseline. Full tables: [`COMPARISON.md`](COMPARISON.md) and
+`results/comparison/RESULTS.md`. Code: `src/ml/` (`baselines_ml.py`,
+`baselines_dl.py`, `train_transformer.py`, `fusion.py`, `metrics.py`,
+`compare.py`, orchestrated by `run_experiments.sh`).
+
+### Proposed model
+
+| | |
+|---|---|
+| Name | RoBERTa-BiLSTM-Attention + TF-IDF ML (late fusion) |
+| Neural core | `roberta-base` token states -> BiLSTM (hidden 256 per direction) -> [attention pool ; max pool ; `<s>` state] -> linear (28 logits, sigmoid) |
+| ML branch | TF-IDF (word 1-2grams + char_wb 2-5grams) -> soft-voting ensemble of Logistic Regression, calibrated Linear SVM and Random Forest (Naive Bayes excluded by a validation PR-AUC floor) |
+| Fusion | `p = (1 - w) * p_neural + w * p_ml`; one global `w` per seed, chosen on validation (grid 0-0.60) |
+| Loss / optimiser | Unweighted `BCEWithLogitsLoss`; AdamW, encoder lr 2e-5, head lr 1e-3, 4 epochs max, batch 32, patience 2 on validation macro PR-AUC |
+| Max sequence length | 64 subword tokens (comparison pipeline; `model-v1` used 128) |
+| Parameters | 126.2M (RoBERTa-base alone: 124.7M) |
+| Thresholds | Per-label, tuned on validation, applied unchanged to test |
+| Seeds | 3 (42, 43, 44) |
+| Artifact | None. Only probabilities are saved (`results/predictions/`) |
+
+### Headline results (GoEmotions test, 3-seed mean +/- std)
+
+| Metric | Proposed | RoBERTa-base | RoBERTa + TF-IDF fusion | Best TF-IDF ML |
+|---|---|---|---|---|
+| Macro F1 | 0.5460 +/- 0.0061 | 0.5389 +/- 0.0077 | **0.5519 +/- 0.0067** | 0.4883 (SVM) |
+| Micro F1 | 0.6107 +/- 0.0021 | 0.6094 +/- 0.0056 | 0.6098 +/- 0.0032 | 0.5696 (SVM) |
+| Macro MCC | 0.5350 | 0.5276 | **0.5400** | 0.4739 (SVM) |
+| Macro Cohen's kappa | 0.5256 | 0.5185 | **0.5319** | 0.4656 (SVM) |
+| Macro sensitivity | 0.5797 | 0.5711 | 0.5788 | 0.5242 (LR) |
+| Macro specificity | 0.9744 | 0.9744 | **0.9755** | 0.9717 (SVM) |
+| Macro AUC-ROC | 0.9451 | 0.9406 | **0.9452** | 0.9082 (ensemble) |
+| Macro PR-AUC | **0.5526** | 0.5432 | 0.5485 | 0.4616 (ensemble) |
+| Log loss | **0.0797** | 0.0802 | 0.0800 | 0.0931 (LR) |
+| ECE | 0.0055 | **0.0042** | 0.0060 | 0.0049 (LR) |
+
+Bold = best of the four columns shown (not necessarily best overall; see
+`RESULTS.md`). Bootstrap 95% CI for proposed macro F1 (seed 42): 0.5470
+[0.5231, 0.5681].
+
+### What the significance tests say
+
+Paired bootstrap on the test set, seed 42 (`results/comparison/significance.csv`):
+
+- **Significantly better** (CI excludes 0) than every classical, from-scratch
+  deep and hybrid-ML baseline on F1, MCC, AUC-ROC and PR-AUC.
+- **Not significantly different** from BERT-base, RoBERTa-base,
+  RoBERTa-BiLSTM-Attention or RoBERTa + TF-IDF fusion on macro F1, micro F1,
+  macro MCC or macro PR-AUC.
+- Small but significant macro AUC-ROC edge over BERT-base (+0.0073),
+  RoBERTa-base (+0.0049) and RoBERTa-BiLSTM-Attention (+0.0080); no significant
+  AUC-ROC difference versus fusion (-0.0018, CI [-0.0039, +0.0001]).
+
+In short: the proposed hybrid is not shown to beat plain RoBERTa/BERT on
+threshold-based metrics, and the simpler RoBERTa + TF-IDF fusion is as good or
+numerically better on most of them. The TF-IDF fusion branch, not the BiLSTM
+head, is where any gain appears to come from.
+
+### Study-specific limitations
+
+- Significance uses one seed's predictions and ignores training-seed variance;
+  no multiple-comparison correction; 300 bootstrap resamples.
+- The fusion weight chosen on validation varied widely across seeds (proposed:
+  0.05, 0.50, 0.35), so the ML branch's contribution is unstable.
+- BERT-base and the classical models are single runs.
+- The `model-v1` numbers below come from the earlier `train_roberta.py`
+  pipeline and are lower (macro F1 0.475) than the comparison pipeline's
+  RoBERTa-base (0.539). Do not mix the two tables.
+- Everything is measured on GoEmotions (Reddit); product-review performance is
+  unmeasured.
+
+---
+
+## `model-v1` (the deployed checkpoint)
 
 ## What it is
 
@@ -182,3 +267,21 @@ measured on fully-annotated rows.
 
 `evaluate.py` is what produces the tuned thresholds and the metrics quoted
 above; training alone does not.
+
+### Reproducing the comparison study
+
+From `src/ml` with the project virtualenv active (needs a CUDA GPU for the
+transformers; about 2.5 h on an RTX 3060 6GB, resumable):
+
+```bash
+pip install -r requirements.txt
+bash run_experiments.sh
+```
+
+This trains the TF-IDF models and ML ensemble, TextCNN / BiLSTM /
+CNN-BiLSTM-Attention (3 seeds), BERT-base, RoBERTa-base and
+RoBERTa-BiLSTM-Attention (3 seeds), then runs `fusion.py` and
+`compare.py --bootstrap 300`. Outputs: `results/predictions/`, `results/logs/`
+and `results/comparison/` (`RESULTS.md`, `metrics_summary.csv`,
+`metrics_per_run.csv`, `per_label_f1.csv`, `significance.csv`,
+`confidence_intervals.csv`, `cost.csv`, figures).

@@ -1,0 +1,6 @@
+hybrid/roberta-base: 126.2M params (2.15M in head), device cuda
+  epoch 1  train loss 0.1191  val macro PR-AUC 0.5273  (181s)
+  epoch 2  train loss 0.0794  val macro PR-AUC 0.5562  (366s)
+  epoch 3  train loss 0.0709  val macro PR-AUC 0.5547  (551s)
+  epoch 4  train loss 0.0636  val macro PR-AUC 0.5536  (728s)
+[saved] results\predictions\roberta_bilstm_attn__seed44.npz

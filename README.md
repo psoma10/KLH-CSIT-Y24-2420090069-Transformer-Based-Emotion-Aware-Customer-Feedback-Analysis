@@ -18,6 +18,8 @@
 
 Conventional sentiment analysis tools classify customer feedback into coarse buckets — positive, negative, or neutral — which is too coarse for a business to act on and too opaque to trust. This project builds a transformer-based multi-label emotion classification framework that closes both gaps at once. A `roberta-base` model is fine-tuned on the GoEmotions taxonomy (27 emotions + neutral, 28 labels total) using multi-label (sigmoid, not softmax) classification, so a single review can carry more than one emotion simultaneously. Predictions are explained at the token level via SHAP, so a non-technical stakeholder can see not just a probability score but the specific words that drove it. The 27 fine-grained emotions roll up into 4 business-actionable buckets — **satisfaction, frustration, confusion, concern** — and each review is scored **segment by segment** rather than as a single average, so a review that opens with praise and ends with a complaint reports both instead of one misleading label. Training extends beyond GoEmotions alone via a masked multi-label loss that combines auxiliary corpora (CARER/dair-ai emotion, DailyDialog) without corrupting the label space with false negatives from their partial label coverage. The system is wrapped in a FastAPI backend and a React dashboard, making it a deployable, callable product rather than a notebook experiment. Full comparison against the reviewed literature — headline metrics, per-label deltas, and a capability matrix — is in [`docs/COMPARISON.md`](docs/COMPARISON.md).
 
+**Baselines and hybrids.** A single-model baseline is not enough evidence, so the repo also benchmarks 13 models on GoEmotions: TF-IDF classical ML (LR, SVM, Naive Bayes, Random Forest), a hybrid TF-IDF ML ensemble, from-scratch deep models (TextCNN, BiLSTM, CNN-BiLSTM-Attention), fine-tuned BERT and RoBERTa, RoBERTa + TF-IDF fusion, RoBERTa-BiLSTM-Attention, and the **proposed hybrid: RoBERTa-BiLSTM-Attention late-fused with the TF-IDF ML ensemble**. They are scored with one metric suite (F1, sensitivity, specificity, MCC, Cohen's kappa, AUC-ROC, PR-AUC, log loss, Brier, ECE and more) plus bootstrap confidence intervals and paired significance tests. **Honest headline:** the proposed hybrid significantly beats every classical and from-scratch deep baseline, but it is *not* significantly better than plain fine-tuned RoBERTa/BERT or the simpler RoBERTa + TF-IDF fusion on F1, MCC or PR-AUC. See [Model comparison](#model-comparison-baselines-vs-hybrids) and [`docs/REVIEWER_RESPONSE.md`](docs/REVIEWER_RESPONSE.md).
+
 ## Current phase status
 
 | Phase | Status |
@@ -26,6 +28,7 @@ Conventional sentiment analysis tools classify customer feedback into coarse buc
 | Data preparation (GoEmotions, CARER, DailyDialog) | ✅ Done — [`data/`](data/) |
 | Model training (baseline + multi-corpus) | ✅ Done — [`results/ml-artifacts/`](results/ml-artifacts/) |
 | Evaluation + comparison against literature | ✅ Done — [`docs/COMPARISON.md`](docs/COMPARISON.md), [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) |
+| Baseline/hybrid study + extended metrics (reviewer feedback) | ✅ Done — [`results/comparison/RESULTS.md`](results/comparison/RESULTS.md), [`docs/REVIEWER_RESPONSE.md`](docs/REVIEWER_RESPONSE.md) |
 | SHAP explainability integration | ✅ Done — [`src/ml/shap_explainer.py`](src/ml/shap_explainer.py) |
 | Backend API (FastAPI) | ✅ Done — [`src/backend/`](src/backend/) |
 | Frontend dashboard (React) | ✅ Done — [`src/frontend/`](src/frontend/) |
@@ -46,6 +49,7 @@ Conventional sentiment analysis tools classify customer feedback into coarse buc
 - [API reference](#api-reference)
 - [Design decisions](#design-decisions)
 - [Model performance](#model-performance)
+- [Model comparison: baselines vs. hybrids](#model-comparison-baselines-vs-hybrids)
 - [Tests](#tests)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
@@ -63,10 +67,13 @@ Mandatory top-level layout:
 │   ├── backend/     # FastAPI app (API, models, services, tests)
 │   ├── frontend/    # React + Vite dashboard
 │   └── ml/          # Training pipeline, SHAP explainer, configs
-├── docs/           # Model card, literature comparison, source papers
+├── docs/           # Model card, model/literature comparison, reviewer response, source papers
 │   └── papers/      # PDFs of the 12 reviewed literature-survey papers
 ├── data/           # Datasets (raw + xlsx-viewable + preprocessed jsonl)
 ├── results/        # Trained model artifacts, metrics, thresholds
+│   ├── comparison/  # RESULTS.md, significance/CI/cost CSVs, figures (generated)
+│   ├── predictions/ # Saved probabilities per model and seed
+│   └── logs/        # Experiment logs
 ├── reports/        # Graded review-phase submission materials
 │   ├── review-1-materials/
 │   └── review-2-materials/
@@ -132,7 +139,8 @@ See [Detailed source layout](#detailed-source-layout) below for what's inside `s
 
 **ML**
 - Python 3.11, HuggingFace `transformers` + `datasets`
-- `roberta-base` (125M params) fine-tuned for multi-label classification
+- `roberta-base` (125M params) fine-tuned for multi-label classification (served model)
+- Comparison study: scikit-learn TF-IDF models, PyTorch TextCNN/BiLSTM/CNN-BiLSTM-Attention, BERT-base, RoBERTa-BiLSTM-Attention, late fusion with a TF-IDF ML ensemble
 - SHAP for token-level explainability
 - GoEmotions (training) + two optional auxiliary corpora — see [Datasets](#datasets)
 - Amazon Reviews sample (inference/demo only, never trained on)
@@ -238,19 +246,33 @@ docker compose up -d postgres redis
 
 (Or install PostgreSQL and Redis locally and point the backend at them.)
 
+**Using a hosted Postgres such as Neon instead of local Postgres.** Put the provider's connection string in `src/backend/.env` as `DATABASE_URL` (the file is gitignored; never commit it or paste the URL into docs/issues):
+
+```
+DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
+```
+
+`app/core/config.py` rewrites a plain `postgresql://` / `postgres://` URL to the `asyncpg` driver, converts `sslmode=` to asyncpg's `ssl=`, and drops `channel_binding`. The Celery worker converts it back to `psycopg2`/`sslmode` for its synchronous engine. With a hosted database you only need Redis locally: `docker compose up -d redis`.
+
+Redis is required for the Celery broker/result backend and the SHAP cache. Without it, batch jobs stay `pending`.
+
 ### 4. Backend
 
 ```bash
 cd src/backend
-cp .env.example .env   # adjust values if not using the Docker defaults
+cp .env.example .env   # then set DATABASE_URL etc. (see Configuration)
 pip install -r requirements.txt
 uvicorn app.main:app --reload   # http://localhost:8000
 ```
 
-In a separate terminal, start the Celery worker for batch CSV jobs:
+In a separate terminal (same venv, from `src/backend`), start the Celery worker for batch CSV jobs:
 
 ```bash
+# Linux/macOS/Docker
 celery -A app.services.celery_app worker --loglevel=info
+
+# Windows: the default prefork pool does not work, use the solo pool
+celery -A app.services.celery_app worker --loglevel=info --pool=solo
 ```
 
 Tables are created from ORM metadata on startup (no Alembic) — a deliberate simplification, noted under [Design decisions](#design-decisions).
@@ -398,7 +420,7 @@ The endpoint returns a job record immediately; poll `GET /api/jobs/{job_id}` for
 
 ## Model performance
 
-Full per-label results, tuned thresholds, and limitations: **[`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)**. The weights are gitignored, so that file is where the numbers live independently of the artifact.
+Full per-label results, tuned thresholds, and limitations: **[`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)**. The weights are gitignored, so that file is where the numbers live independently of the artifact. This section describes the **served checkpoint `model-v1`**; for the baseline/hybrid study (different, newer training pipeline, higher RoBERTa-base score of 0.539 macro F1) see [Model comparison](#model-comparison-baselines-vs-hybrids).
 
 **GoEmotions test split** — Macro F1 **0.475** · Micro F1 **0.600** · Validation loss **0.085**
 
@@ -421,6 +443,47 @@ Both figures are in line with published `roberta-base` GoEmotions baselines (mac
 Small net gain, but the aggregate hides where it actually mattered. `nervousness` — the model's second-weakest label, 23 test examples — jumped **+0.166 to +0.321 F1** across the two runs, along with real gains on `disgust`, `optimism`, `surprise`, and `anger`. `realization` and `embarrassment` regressed in both runs by a consistent margin, a genuine trade-off rather than noise: neither auxiliary corpus covers those labels, so the model's gradient budget shifted toward the labels that gained coverage. `grief`, `pride`, and `relief` stayed at exactly 0.000 in both runs — two independent confirmations that they are data-starved rather than merely under-weighted, since neither auxiliary corpus contains any of the three.
 
 The mechanism this depends on: each auxiliary corpus annotates only a subset of the 28 labels, so a label it does not annotate is *unannotated*, not negative. Treating those zeros as negatives would suppress every uncovered label whenever that corpus appears — the opposite of the intended effect. `src/ml/aux_datasets.py` and `src/ml/train_roberta.py`'s masked BCE loss (see [Design decisions](#design-decisions)) exist specifically to prevent that. Not used for `model-v1` — `aux_datasets: []` by default, so the headline numbers above stay reproducible from the committed config; this is a documented alternative, not the shipped model.
+
+---
+
+## Model comparison: baselines vs. hybrids
+
+Added after reviewer feedback that a single-model baseline is not a suitable ML baseline. Full write-up: [`docs/COMPARISON.md`](docs/COMPARISON.md) · point-by-point reply: [`docs/REVIEWER_RESPONSE.md`](docs/REVIEWER_RESPONSE.md) · machine-generated tables: [`results/comparison/RESULTS.md`](results/comparison/RESULTS.md).
+
+**Models (13).** Classical ML on TF-IDF (word 1-2grams + char 2-5grams): Logistic Regression, Linear SVM, Naive Bayes, Random Forest. Hybrid ML: soft-voting ensemble (LR + SVM + RF). Deep learning from scratch: TextCNN, BiLSTM, CNN-BiLSTM-Attention. Transformers: BERT-base, RoBERTa-base. Hybrids: RoBERTa + TF-IDF ML fusion, RoBERTa-BiLSTM-Attention, and the **proposed RoBERTa-BiLSTM-Attention + TF-IDF ML** (late fusion `p = (1-w)·p_neural + w·p_ml`, `w` chosen on validation).
+
+**Metrics.** Threshold-based: macro/micro/weighted/samples F1, precision, sensitivity (recall), specificity, balanced accuracy, MCC (macro and micro), Cohen's kappa, exact-match, top-1, Jaccard, Hamming loss. Threshold-free: AUC-ROC and PR-AUC (macro and micro), label-ranking AP, coverage error, ranking loss. Probability quality: log loss, Brier, ECE. Plus bucket-level F1/AUC, cost (params, train time, inference time), bootstrap 95% CIs, paired-bootstrap significance. Per-label thresholds are tuned on validation for every model; one scorer (`src/ml/compare.py`) is used for all.
+
+**Results (GoEmotions test, 5,427 comments; mean over 3 seeds where available):**
+
+| Model | Macro F1 | Macro MCC | Macro AUC-ROC | Macro PR-AUC | Log loss |
+|---|---|---|---|---|---|
+| TF-IDF + Linear SVM (best classical F1) | 0.4883 | 0.4739 | 0.9040 | 0.4610 | 0.0938 |
+| TF-IDF ML Ensemble (LR+SVM+RF) | 0.4849 | 0.4704 | 0.9082 | 0.4616 | 0.0937 |
+| BiLSTM (best from-scratch DL) | 0.4810 | 0.4691 | 0.8984 | 0.4485 | 0.0996 |
+| BERT-base | 0.5448 | 0.5309 | 0.9370 | 0.5458 | 0.0811 |
+| RoBERTa-base | 0.5389 | 0.5276 | 0.9406 | 0.5432 | 0.0802 |
+| RoBERTa + TF-IDF ML fusion | **0.5519** | **0.5400** | **0.9452** | 0.5485 | 0.0800 |
+| RoBERTa-BiLSTM-Attention | 0.5464 | 0.5339 | 0.9380 | 0.5509 | 0.0812 |
+| **Proposed: RoBERTa-BiLSTM-Attn + TF-IDF ML** | 0.5460 | 0.5350 | 0.9451 | **0.5526** | **0.0797** |
+
+**Does the proposed hybrid give a meaningful improvement?** It depends on the comparator.
+
+- **Over classical, hybrid-ML and from-scratch deep baselines: yes.** +0.06 to +0.25 macro F1 and +0.04 to +0.14 macro AUC-ROC, all paired-bootstrap significant.
+- **Over plain fine-tuned BERT-base / RoBERTa-base: not on F1, MCC or PR-AUC** (CIs include zero). It has a small but significant macro AUC-ROC edge (+0.007 / +0.005).
+- **Over RoBERTa + TF-IDF fusion and RoBERTa-BiLSTM-Attention: no.** No significant difference on macro F1, micro F1, MCC, AUC-ROC or PR-AUC versus fusion; versus RoBERTa-BiLSTM-Attention only AUC-ROC differs (+0.008). The fusion model has the higher mean macro F1 (0.5519 vs. 0.5460). Most of the gain over classical models comes from the pretrained transformer, and the TF-IDF fusion rather than the BiLSTM head looks like the useful hybrid component.
+
+Caveats: significance tests use seed 42 only and resample test rows (no training-seed variance, no multiple-comparison correction, 300 resamples); BERT-base and classical models are single runs; everything is GoEmotions/Reddit, not product reviews. The proposed hybrid is evaluated from saved probabilities and is **not** the checkpoint the API serves (that is `model-v1`, a plain RoBERTa trained with the older pipeline, macro F1 0.475).
+
+### Reproducing the comparison
+
+```bash
+cd src/ml
+pip install -r requirements.txt     # adds pandas, scipy, matplotlib, joblib
+bash run_experiments.sh             # Git Bash / WSL on Windows; needs a CUDA GPU
+```
+
+`run_experiments.sh` is resumable (a run whose prediction file exists is skipped) and takes about 2.5 h on an RTX 3060 6GB. It runs, in order: classical ML + ML ensemble (`baselines_ml.py`, ~4 min CPU) → per seed 42/43/44: `train_transformer.py --arch plain` (RoBERTa-base) and `--arch hybrid` (RoBERTa-BiLSTM-Attention), plus `baselines_dl.py` for TextCNN/BiLSTM/CNN-BiLSTM → BERT-base (seed 42) → `fusion.py` → `compare.py --bootstrap 300`. Outputs land in `results/predictions/`, `results/logs/` and `results/comparison/`.
 
 ---
 
@@ -491,6 +554,13 @@ src/
 │   ├── data_prep.py              # GoEmotions + Amazon Reviews preparation
 │   ├── train_roberta.py          # Multi-label RoBERTa fine-tuning
 │   ├── evaluate.py               # Per-label threshold tuning + test metrics
+│   ├── baselines_ml.py           # TF-IDF LR/SVM/NB/RF + hybrid ML ensemble
+│   ├── baselines_dl.py           # TextCNN, BiLSTM, CNN-BiLSTM-Attention
+│   ├── train_transformer.py      # BERT/RoBERTa plain + RoBERTa-BiLSTM-Attention
+│   ├── fusion.py                 # Late fusion of neural + TF-IDF ML probabilities
+│   ├── metrics.py                # Full metric suite (MCC, kappa, AUC, PR-AUC, ...)
+│   ├── compare.py                # Tables, CIs, significance tests, figures
+│   ├── run_experiments.sh        # End-to-end reproduction of the comparison
 │   ├── shap_explainer.py         # SHAP attribution logic (shared with backend)
 │   ├── emotion_labels.py         # Canonical label order + business bucket map
 │   └── configs/train_config.yaml
@@ -522,7 +592,7 @@ Outside `src/`: `data/` (datasets), `results/ml-artifacts/` (trained weights + m
 
 **Predictions work but nothing appears in the Dashboard.** Check `db_ready` on `/health`. The app starts without Postgres by design; analysis succeeds and persistence fails silently in that state.
 
-**Batch jobs stay `pending` forever.** The Celery worker isn't running or can't reach Redis. Start it with `celery -A app.services.celery_app worker --loglevel=info` from `backend/`, and verify `CELERY_BROKER_URL` points at a reachable Redis.
+**Batch jobs stay `pending` forever.** The Celery worker isn't running or can't reach Redis. Start it with `celery -A app.services.celery_app worker --loglevel=info` from `src/backend/` (on Windows add `--pool=solo`), and verify `CELERY_BROKER_URL` points at a reachable Redis.
 
 **CORS errors in the browser console.** `FRONTEND_ORIGIN` must exactly match the origin the frontend is served from — scheme, host, and port, with no trailing slash. The default allows only `http://localhost:5173`.
 
@@ -556,6 +626,7 @@ This is a capstone deliverable, not a production system. Known gaps, stated plai
 - **No database migrations.** Schema changes require dropping and recreating tables.
 - **Trained on GoEmotions (Reddit comments), applied to product reviews.** This is a domain shift. The Amazon Reviews sample is used for inference and demonstration only, never for fine-tuning, so accuracy on review text is expected to be lower than the reported GoEmotions test metrics — but this is a reasoned expectation, **not a measurement**. No labeled product-review emotion set exists to check it against.
 - **Three labels score 0.000 F1** (`grief`, `pride`, `relief`). They are almost certainly data-starved, but that has not been *tested*: training used unweighted `BCEWithLogitsLoss`, under which predicting "absent" for a rare label is nearly free, so imbalance and genuine unlearnability are currently confounded. `use_pos_weight: true` in `configs/train_config.yaml` enables per-label positive weighting to separate the two. The ablation ships but has not been run.
-- **Metrics come from a single seed** and are not re-run for variance — which matters most for the labels with single-digit support.
+- **`model-v1` metrics come from a single seed.** The comparison study uses 3 seeds for most neural models, but BERT-base and the classical models are single runs, and its significance tests use one seed's predictions.
+- **The proposed hybrid is not shown to beat plain RoBERTa or RoBERTa + TF-IDF fusion** on F1, MCC or PR-AUC, and it is not deployed (only probabilities were saved, no checkpoint). See [Model comparison](#model-comparison-baselines-vs-hybrids).
 - **SHAP faithfulness is assumed, not measured.** No human evaluation of whether the attributions match human judgment of what drove the emotion.
 - **Only the first 128 tokens are read.** Reported via the `truncated` flag, but a long review whose complaint sits in the last paragraph can be scored on its polite opening alone.

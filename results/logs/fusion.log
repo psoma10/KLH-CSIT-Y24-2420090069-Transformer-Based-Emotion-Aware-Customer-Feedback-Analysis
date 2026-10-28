@@ -1,0 +1,14 @@
+roberta_plain seed 42: w=0.35  val macro-F1 0.5609 (w=0: 0.5579)
+[saved] results\predictions\roberta_plain+ml__seed42.npz
+roberta_plain seed 43: w=0.50  val macro-F1 0.5627 (w=0: 0.5546)
+[saved] results\predictions\roberta_plain+ml__seed43.npz
+roberta_plain seed 44: w=0.45  val macro-F1 0.5620 (w=0: 0.5576)
+[saved] results\predictions\roberta_plain+ml__seed44.npz
+roberta_bilstm_attn seed 42: w=0.05  val macro-F1 0.5699 (w=0: 0.5695)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed42.npz
+roberta_bilstm_attn seed 43: w=0.50  val macro-F1 0.5686 (w=0: 0.5595)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed43.npz
+roberta_bilstm_attn seed 44: w=0.35  val macro-F1 0.5672 (w=0: 0.5605)
+[saved] results\predictions\roberta_bilstm_attn+ml__seed44.npz
+bert_plain seed 42: w=0.40  val macro-F1 0.5649 (w=0: 0.5571)
+[saved] results\predictions\bert_plain+ml__seed42.npz

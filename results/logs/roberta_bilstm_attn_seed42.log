@@ -1,0 +1,14 @@
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\huggingface_hub\file_download.py:143: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\somap\.cache\huggingface\hub\models--roberta-base. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+  warnings.warn(message)
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\.venv\Lib\site-packages\transformers\tokenization_utils_base.py:1601: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be depracted in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+A:\Coding\Projects\ALT\KLH-CSIT-Y24-2420090069-Transformer-Based-Emotion-Aware-Customer-Feedback-Analysis\src\ml\train_transformer.py:133: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.cuda.amp.GradScaler(enabled=device.type == "cuda")
+hybrid/roberta-base: 126.2M params (2.15M in head), device cuda
+  epoch 1  train loss 0.1183  val macro PR-AUC 0.5259  (243s)
+  epoch 2  train loss 0.0795  val macro PR-AUC 0.5506  (430s)
+  epoch 3  train loss 0.0709  val macro PR-AUC 0.5564  (618s)
+  epoch 4  train loss 0.0635  val macro PR-AUC 0.5527  (809s)
+[saved] results\predictions\roberta_bilstm_attn__seed42.npz

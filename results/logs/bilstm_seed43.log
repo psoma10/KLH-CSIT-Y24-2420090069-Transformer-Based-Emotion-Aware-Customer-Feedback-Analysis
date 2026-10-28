@@ -1,0 +1,17 @@
+bilstm: vocab 13,653, device cuda
+  epoch  1  train loss 0.1387  val macro PR-AUC 0.2766
+  epoch  2  train loss 0.1080  val macro PR-AUC 0.3529
+  epoch  3  train loss 0.0988  val macro PR-AUC 0.3930
+  epoch  4  train loss 0.0922  val macro PR-AUC 0.4207
+  epoch  5  train loss 0.0873  val macro PR-AUC 0.4383
+  epoch  6  train loss 0.0830  val macro PR-AUC 0.4533
+  epoch  7  train loss 0.0789  val macro PR-AUC 0.4503
+  epoch  8  train loss 0.0752  val macro PR-AUC 0.4576
+  epoch  9  train loss 0.0717  val macro PR-AUC 0.4600
+  epoch 10  train loss 0.0685  val macro PR-AUC 0.4562
+  epoch 11  train loss 0.0653  val macro PR-AUC 0.4614
+  epoch 12  train loss 0.0627  val macro PR-AUC 0.4595
+  epoch 13  train loss 0.0595  val macro PR-AUC 0.4574
+  epoch 14  train loss 0.0573  val macro PR-AUC 0.4496
+  epoch 15  train loss 0.0549  val macro PR-AUC 0.4490
+[saved] results\predictions\bilstm__seed43.npz

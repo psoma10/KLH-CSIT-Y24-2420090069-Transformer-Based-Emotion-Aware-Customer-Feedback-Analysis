@@ -1,0 +1,11 @@
+textcnn: vocab 13,653, device cuda
+  epoch  1  train loss 0.1394  val macro PR-AUC 0.2929
+  epoch  2  train loss 0.1139  val macro PR-AUC 0.3685
+  epoch  3  train loss 0.1039  val macro PR-AUC 0.4045
+  epoch  4  train loss 0.0962  val macro PR-AUC 0.4127
+  epoch  5  train loss 0.0889  val macro PR-AUC 0.4173
+  epoch  6  train loss 0.0822  val macro PR-AUC 0.4155
+  epoch  7  train loss 0.0761  val macro PR-AUC 0.4089
+  epoch  8  train loss 0.0703  val macro PR-AUC 0.4020
+  epoch  9  train loss 0.0647  val macro PR-AUC 0.3972
+[saved] results\predictions\textcnn__seed43.npz
